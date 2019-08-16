@@ -79,6 +79,8 @@ main(int argc, char *argv[])
     char *outf = argv[3];
 
 //    FILE *file = fopen (outf, "a" );
+//    printf("Files %s %s\n", file1, file2);
+
 
     DYNALLSTAT(int,lab1,lab1_sz);
     DYNALLSTAT(int,lab2,lab2_sz);
@@ -112,11 +114,11 @@ main(int argc, char *argv[])
     int n2 = s2.n_nodes;
     int m2 = s2.n_edges;
 
-//    if (n1 != n2 || m1 != m2) {
+    if (n1 != n2 || m1 != m2) {
 //        printf("Non-isomorphic based on number of nodes/edges.\n");
 //        fprintf(file, "%s %s %d\n", file1, file2, 0);
-//        exit(0);
-//    }
+        exit(0);
+    }
 
     n = n1;
     m = SETWORDSNEEDED(n);
@@ -156,10 +158,12 @@ main(int argc, char *argv[])
  /* Compare canonically labelled graphs */
     if (memcmp(cg1,cg2,m*sizeof(graph)*n) == 0)
     {
-        FILE *file = fopen (outf, "a");
+        FILE *file = fopen (outf, "w");
         fprintf(file, "%s %s %d\n", file1, file2, 1);
 
-        printf("Isomorphic. %s %s\n", file1, file2);
+        exit(0);
+
+//        printf("Isomorphic. %s %s\n", file1, file2);
 //        if (n <= 1000)
 //        {
 //         /* Write the isomorphism.  For each i, vertex lab1[i]
@@ -172,10 +176,11 @@ main(int argc, char *argv[])
 //        }
         fclose(file);
     }
-//    else {
+    else {
 //        printf("Not isomorphic.\n");
 //        fprintf(file, "%s %s %d\n", file1, file2, 0);
-//    }
+        exit(0);
+    }
 
 
     exit(0);

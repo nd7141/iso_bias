@@ -4,61 +4,103 @@ import re
 import time
 import multiprocessing as mp
 from functools import partial
-from itertools import combinations
+from itertools import combinations, chain
+from collections import defaultdict as ddict
+from pprint import pprint
 
 def run_nauty(f1, f2):
     outf = outdir + f1.split('/')[-1] + '-' + f2.split('/')[-1]
     f1 = indir + f1
     f2 = indir + f2
-    check_call(f"./iso {f1} {f2} {outf} &", cwd='.', shell=True)
+    check_call([f"./iso {f1} {f2} {outf}"], cwd='.', shell=True)
+
+def get_graph_stats(fn):
+    with open(indir + fn) as f:
+        line = next(f)
+        n, m = line.split()
+        return int(n), int(m)
+
+def get_equivalent_graphs(fns):
+    stats2graphs = ddict(list)
+    for fn in fns:
+        stats2graphs[get_graph_stats(fn)].append(fn)
+    return stats2graphs
+
+def get_dataset_pairs(fns):
+    stats2graphs = get_equivalent_graphs(fns)
+    generators = []
+    for graphs in stats2graphs.values():
+        if len(graphs) > 1:
+            generators.append(combinations(graphs, 2))
+    return chain(*generators)
 
 if __name__ == '__main__':
 
     # experiment: write genrators for each graph
     # https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets#contact
     dataset = 'REDDIT-BINARY'
-    # ds = [
- # 'Tox21_AHR',
- # 'Tox21_AR',
- # 'Tox21_ARE',
- # 'Tox21_AR-LBD',
- # 'Tox21_aromatase',
- # 'Tox21_ATAD5',
- # 'Tox21_ER',
- # 'Tox21_ER_LBD',
- # 'Tox21_HSE',
- # 'Tox21_MMP',
- # 'Tox21_p53',
- # 'Tox21_PPAR-gamma',
- # 'TWITTER-Real-Graph-Partial',
- # 'Letter-high',
- # 'Letter-low',
- # 'Letter-med',
- # 'Cuneiform',
- # 'DBLP_v1',
- # 'DHFR',
- # 'PROTEINS',
- # 'PTC_FM',
- # 'PTC_FR',
- # 'PTC_MM',
- # 'PTC_MR',
- # 'SYNTHETIC',
- # 'MSRC_21',
- # 'MSRC_21C',
- # 'MSRC_9',
- # 'OHSU',
- # 'COX2',
- # 'COX2_MD',
- # 'DHFR_MD',
- # 'ER_MD',
- # 'FIRSTMM_DB',
- # 'KKI',
- #        'Mutagenicity']
-    ds = ['MUTAG']
+    ds = [
+        'FIRSTMM_DB',
+ 'OHSU',
+ 'KKI',
+ 'Peking_1',
+ 'MUTAG',
+ 'MSRC_21C',
+ 'MSRC_9',
+ 'Cuneiform',
+ 'SYNTHETIC',
+ 'COX2_MD',
+ 'BZR_MD',
+ 'PTC_MM',
+ 'PTC_MR',
+ 'PTC_FM',
+ 'PTC_FR',
+ 'DHFR_MD',
+ 'Synthie',
+ 'BZR',
+ 'ER_MD',
+ 'COX2',
+ 'MSRC_21',
+ 'ENZYMES',
+ 'DHFR',
+ 'IMDB-BINARY',
+ 'PROTEINS',
+ 'DD',
+ 'IMDB-MULTI',
+ 'AIDS',
+ 'REDDIT-BINARY',
+ 'Letter-high',
+ 'Letter-low',
+ 'Letter-med',
+ 'Fingerprint',
+ 'COIL-DEL',
+ 'COIL-RAG',
+ 'NCI1',
+ 'NCI109',
+ 'FRANKENSTEIN',
+ 'Mutagenicity',
+ 'REDDIT-MULTI-5K',
+ 'COLLAB',
+ 'Tox21_ARE',
+ 'Tox21_aromatase',
+ 'Tox21_MMP',
+ 'Tox21_ER',
+ 'Tox21_HSE',
+ 'Tox21_AHR',
+ 'Tox21_PPAR-gamma',
+ 'Tox21_AR-LBD',
+ 'Tox21_p53',
+ 'Tox21_ER_LBD',
+ 'Tox21_ATAD5',
+ 'Tox21_AR',
+ 'REDDIT-MULTI-12K']
+    ds = ds[:5]
+    results_dir = 'results3/'
     for dataset in ds:
-        os.makedirs('results', exist_ok=True)
+        print(dataset)
+        os.makedirs(results_dir, exist_ok=True)
         indir = f'datasets/data_adj/{dataset}_adj/'
-        outdir = f'results/{dataset}_groups/'
+        outdir = f'{results_dir}/{dataset}_groups/'
 
         # compile program for running graph isomorphism
         exec = 'gr'
@@ -69,7 +111,7 @@ if __name__ == '__main__':
         fns = os.listdir(indir)
         for fn in fns:
             if fn.endswith(".adj"):
-                print(fn)
+                # print(fn)
                 inf = indir + fn
                 outf = outdir + fn.split('.')[0] + '.txt'
                 # try:
@@ -82,39 +124,41 @@ if __name__ == '__main__':
     # ds = ['enzymes']
     # ds = ['REDDIT-MULTI-5K', 'REDDIT-MULTI-12K']
     # for dataset in ds:
-    #     indir = f'datasets/data_adj/{dataset}_adj/'
-    #
-    #     outdir = f'results/{dataset}_iso2/'
-    #     os.makedirs(outdir, exist_ok=True)
-    #
-    #     outf = f'results/{dataset}_iso.txt'
-    #     if os.path.exists(outf):
-    #         check_call(f"rm {outf}", cwd =".", shell = True)
-    #
-    #     # compile program for running graph isomorphism
-    #     compile_exec = "gcc -o iso nauty_iso.c nauty26r11/nauty.a"
-    #     check_call(compile_exec, cwd = ".", shell=True)
-    #
-    #     # run graph isomorphism
-    #     fns = list(filter(lambda x: x.endswith('.adj'), os.listdir(indir)))
-    #     N = len(fns)
-    #     ids = []
-    #     start = time.time()
-    #
-    #     f = partial(run_nauty,
-    #                 outf=outf)
-    #     pairs = combinations(fns, 2)
-    #
-    #     pool = mp.Pool(processes=64)
-    #     pool.starmap(run_nauty, pairs)
-    #     pool.close()
+        indir = f'datasets/data_adj/{dataset}_adj/'
+
+        outdir = f'{results_dir}/{dataset}_iso/'
+        os.makedirs(outdir, exist_ok=True)
+
+        outf = f'{results_dir}/{dataset}_iso.txt'
+        if os.path.exists(outf):
+            check_call(f"rm {outf}", cwd =".", shell = True)
+
+        # compile program for running graph isomorphism
+        compile_exec = "gcc -o iso nauty_iso.c nauty26r11/nauty.a"
+        check_call(compile_exec, cwd = ".", shell=True)
+
+        # run graph isomorphism
+        fns = list(filter(lambda x: x.endswith('.adj'), os.listdir(indir)))
+        N = len(fns)
+        ids = []
+        start = time.time()
+
+        f = partial(run_nauty)
+        # pprint(get_equivalent_graphs(fns))
+        pairs = get_dataset_pairs(fns)
+        # pairs = combinations(fns, 2)
+
+        pool = mp.Pool(processes=64)
+        pool.starmap(run_nauty, pairs)
+        pool.close()
 
         # for i in range(N-1):
         #     start2i = time.time()
         #     for j in range(i+1, N):
         #         f1 = indir + fns[i]
         #         f2 = indir + fns[j]
-        #         check_call(f"./iso {f1} {f2} {outf}", cwd = '.', shell= True)
+        #         print(f1, f2)
+        #         check_call(f"./iso {f1} {f2} {outf} &" , cwd = '.', shell= True)
         #         ids.append([f1, f2])
         #     finish2i = time.time()
         #     itsec = (finish2i-start2i)/(N-i-1)

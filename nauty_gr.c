@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     options.outfile = fptr;
 //
 // read graph
-    int edges1[10000];
+    int edges1[100000];
     Struct s1 = read_edges(inf, edges1);
 //    printf("Nodes: %d %d\n", s1.n_nodes, s1.n_edges);
     int n1 = s1.n_nodes;
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     }
 
     densenauty(g,lab,ptn,orbits,&options,&stats,m,n,NULL);
-    writegroupsize(stdout,stats.grpsize1,stats.grpsize2);
+//    writegroupsize(stdout,stats.grpsize1,stats.grpsize2);
 
     fclose(fptr);
 
