@@ -50,41 +50,41 @@ def get_dataset_pairs(fns):
 if __name__ == '__main__':
 
     use_node_labels = True
-    compute_groups = False
+    compute_groups = True
     results_dir = 'results_node_labels/'
 
     # experiment: write genrators for each graph
     # https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets#contact
     dataset = 'REDDIT-BINARY'
     ds = [
-        # 'FIRSTMM_DB',
-        # 'OHSU',
-        # 'KKI',
-        # 'Peking_1',
-        # 'MUTAG',
-        # 'MSRC_21C',
-        # 'MSRC_9',
-        # 'Cuneiform',
-        # 'SYNTHETIC',
-        # 'COX2_MD',
-        # 'BZR_MD',
-        # 'PTC_MM',
-        # 'PTC_MR',
-        # 'PTC_FM',
-        # 'PTC_FR',
-        # 'DHFR_MD',
-        # 'Synthie',
-        # 'BZR',
-        # 'ER_MD',
-        # 'COX2',
-        # 'MSRC_21',
-        # 'ENZYMES',
-        # 'DHFR',
-        # 'IMDB-BINARY',
-        # 'PROTEINS',
-        # 'DD',
-        # 'IMDB-MULTI',
-        # 'AIDS',
+        'FIRSTMM_DB',
+        'OHSU',
+        'KKI',
+        'Peking_1',
+        'MUTAG',
+        'MSRC_21C',
+        'MSRC_9',
+        'Cuneiform',
+        'SYNTHETIC',
+        'COX2_MD',
+        'BZR_MD',
+        'PTC_MM',
+        'PTC_MR',
+        'PTC_FM',
+        'PTC_FR',
+        'DHFR_MD',
+        'Synthie',
+        'BZR',
+        'ER_MD',
+        'COX2',
+        'MSRC_21',
+        'ENZYMES',
+        'DHFR',
+        'IMDB-BINARY',
+        'PROTEINS',
+        'DD',
+        'IMDB-MULTI',
+        'AIDS',
         'REDDIT-BINARY',
         'Letter-high',
         'Letter-low',
@@ -110,7 +110,8 @@ if __name__ == '__main__':
         'Tox21_ER_LBD',
         'Tox21_ATAD5',
         'Tox21_AR',
-        'REDDIT-MULTI-12K']
+        'REDDIT-MULTI-12K'
+    ]
     # ds = ['MUTAG']
 
     for dataset in ds:
@@ -163,6 +164,8 @@ if __name__ == '__main__':
         N = len(fns)
         ids = []
         start = time.time()
+
+
 
         f = partial(run_nauty, use_node_labels=use_node_labels)  # function to call executable
 

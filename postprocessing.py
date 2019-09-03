@@ -2,6 +2,8 @@ import os
 import re
 from collections import defaultdict as ddict
 
+import pprint
+
 if __name__ == '__main__':
     # verifying that found isomorphic graphs have the same order and size (double check)
     dataset = 'COLLAB'
@@ -61,15 +63,11 @@ if __name__ == '__main__':
         'Tox21_AR',
         'REDDIT-MULTI-12K'
     ]
-    ds = ds[:5]
+    ds = ['MUTAG']
     for dataset in ds:
         print(dataset)
-        res_fn = f'results2/{dataset}_all_groups.txt'
-        iso_dir = f'results2/{dataset}_iso/'
-        out_fn = f"results2/orbits/"
-        os.makedirs(out_fn, exist_ok=True)
 
-
+        # res_fn = f'results2/{dataset}_all_groups.txt'
         # with open(res_fn) as f:
         #     d = dict()
         #     for line in f:
@@ -89,6 +87,13 @@ if __name__ == '__main__':
         #         continue
 
         # count the number of isomorphic groups
+        # results_dir = 'results_node_labels/'
+        results_dir = 'results_no_labels/'
+        # results_dir = 'results2/'
+        iso_dir = f'{results_dir}/{dataset}_iso/'
+        out_fn = f"{results_dir}/orbits/"
+        os.makedirs(out_fn, exist_ok=True)
+
         fns = list(filter(lambda x: x.endswith('.adj'), os.listdir(iso_dir)))
         iso_graphs = ddict(list)
         for fn in fns:
@@ -106,7 +111,12 @@ if __name__ == '__main__':
                 count += 1
                 covered.add(key)
                 covered = covered.union(value)
-        with open(out_fn + f"{dataset}_orbits.txt", "w") as f:
+        # s = set()
+        # for orbit in orbits:
+        #     print(len(s), orbit, len(s.intersection(orbit)))
+        #     assert len(s.intersection(orbit)) == 0
+        #     s = s.union(orbit)
+        with open(out_fn + f"2.{dataset}_orbits.txt", "w") as f:
             for i, l in enumerate(sorted(orbits, key=lambda x: len(x), reverse=True)):
                 print(i, len(l), sorted(l, key=lambda x: int(x)), file=f)
 
