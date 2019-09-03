@@ -59,8 +59,9 @@ if __name__ == '__main__':
         'Tox21_ER_LBD',
         'Tox21_ATAD5',
         'Tox21_AR',
-        'REDDIT-MULTI-12K']
-    ds = ds[:]
+        'REDDIT-MULTI-12K'
+    ]
+    ds = ds[:5]
     for dataset in ds:
         print(dataset)
         res_fn = f'results2/{dataset}_all_groups.txt'

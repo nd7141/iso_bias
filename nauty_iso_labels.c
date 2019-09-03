@@ -142,8 +142,8 @@ main(int argc, char *argv[])
     int m2 = s2.n_edges;
 
     if (n1 != n2 || m1 != m2) {
-        printf("Non-isomorphic based on number of nodes/edges.\n");
-        fprintf(file, "%s %s %d\n", file1, file2, 0);
+//        printf("Non-isomorphic based on number of nodes/edges.\n");
+//        fprintf(file, "%s %s %d\n", file1, file2, 0);
         exit(0);
     }
 
@@ -184,14 +184,14 @@ main(int argc, char *argv[])
     int ptn2[s2.n_nodes];
     read_labels(lab_fn1, lab1, ptn1);
     read_labels(lab_fn2, lab2, ptn2);
-    printf("Label 1 %d %d\n", s1.n_nodes, s1.n_edges);
-    for (i=0; i < s1.n_nodes; i+=1) {
-        printf("%d %d\n", lab1[i], ptn1[i]);
-    }
-    printf("Label 2 %d %d\n", s2.n_nodes, s2.n_edges);
-    for (i=0; i < s2.n_nodes; i+=1) {
-        printf("%d %d\n", lab2[i], ptn2[i]);
-    }
+//    printf("Label 1 %d %d\n", s1.n_nodes, s1.n_edges);
+//    for (i=0; i < s1.n_nodes; i+=1) {
+//        printf("%d %d\n", lab1[i], ptn1[i]);
+//    }
+//    printf("Label 2 %d %d\n", s2.n_nodes, s2.n_edges);
+//    for (i=0; i < s2.n_nodes; i+=1) {
+//        printf("%d %d\n", lab2[i], ptn2[i]);
+//    }
 
  /* Label g1, result in cg1 and labelling in lab1; similarly g2.
     It is not necessary to pre-allocate space in cg1 and cg2, but
@@ -209,7 +209,7 @@ main(int argc, char *argv[])
 
 //        exit(0);
 
-        printf("Isomorphic. %s %s\n", file1, file2);
+//        printf("Isomorphic. %s %s\n", file1, file2);
 //        if (n <= 1000)
 //        {
 //         /* Write the isomorphism.  For each i, vertex lab1[i]
@@ -223,7 +223,7 @@ main(int argc, char *argv[])
         fclose(file);
     }
     else {
-        printf("Not isomorphic.\n");
+//        printf("Not isomorphic.\n");
 //        fprintf(file, "%s %s %d\n", file1, file2, 0);
 //        exit(0);
     }
