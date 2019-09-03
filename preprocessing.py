@@ -18,9 +18,18 @@ def formatg(graph):
     return nx.relabel_nodes(graph, mapping)
 
 def write_node_labels(fn, node_labels):
-    with open(fn, 'w') as f:
-        for i, label in enumerate(node_labels):
-            f.write(f"{i} {label}\n")
+    print(fn, node_labels)
+    sorted_labels = sorted(enumerate(node_labels), key=lambda x: x[1])
+    with open(fn, 'w+') as f:
+        for i in range(len(sorted_labels)):
+            node, label = sorted_labels[i]
+            if i < len(sorted_labels) - 1:
+                if label != sorted_labels[i+1][1]:
+                    f.write(f"{node} 0\n")
+                else:
+                    f.write(f"{node} 1\n")
+            else:
+                f.write(f"{node} 0\n")
 
 def write_edge_labels(edges, fn, edge_labels):
     assert len(edges) == len(edge_labels)
@@ -164,7 +173,7 @@ if __name__ == "__main__":
           'Tox21_AR',
           'REDDIT-MULTI-12K',
           'DBLP_v1']
-    ds = ['MUTAG']
+    # ds = ['MUTAG']
     for dataset in ds:
         # try:
             print(dataset)

@@ -82,8 +82,10 @@ int read_labels(char *inf, int lab[], int ptn[]) {
             word_count += 1;
             pch = strtok(NULL, " ");
         }
+//        printf("%d %d\n", line_words[0], line_words[1]);
         lab[line_count] = line_words[0];
         ptn[line_count] = line_words[1];
+        line_count += 1;
     }
     fclose(file);
     return 0;
@@ -95,21 +97,21 @@ main(int argc, char *argv[])
 {
 //    printf("Number of arguments %d\n", argc);
     if (argc < 4) {
-        printf("You should provide two files for graphs + output.");
+//        printf("You should provide two files for graphs + output.");
         exit(1);
     }
     char *file1 = argv[1];
     char *file2 = argv[2];
     char *outf = argv[3];
 
-//    FILE *file = fopen (outf, "a" );
+    FILE *file = fopen (outf, "a" );
 //    printf("Files %s %s\n", file1, file2);
 
 
-    DYNALLSTAT(int,lab1,lab1_sz);
-    DYNALLSTAT(int,lab2,lab2_sz);
-    DYNALLSTAT(int,ptn1,ptn_sz1);
-    DYNALLSTAT(int,ptn2,ptn_sz2);
+//    DYNALLSTAT(int,lab1,lab1_sz);
+//    DYNALLSTAT(int,lab2,lab2_sz);
+//    DYNALLSTAT(int,ptn1,ptn_sz1);
+//    DYNALLSTAT(int,ptn2,ptn_sz2);
     DYNALLSTAT(int,orbits,orbits_sz);
     DYNALLSTAT(int,map,map_sz);
     DYNALLSTAT(graph,g1,g1_sz);
@@ -140,8 +142,8 @@ main(int argc, char *argv[])
     int m2 = s2.n_edges;
 
     if (n1 != n2 || m1 != m2) {
-//        printf("Non-isomorphic based on number of nodes/edges.\n");
-//        fprintf(file, "%s %s %d\n", file1, file2, 0);
+        printf("Non-isomorphic based on number of nodes/edges.\n");
+        fprintf(file, "%s %s %d\n", file1, file2, 0);
         exit(0);
     }
 
@@ -149,10 +151,10 @@ main(int argc, char *argv[])
     m = SETWORDSNEEDED(n);
     nauty_check(WORDSIZE, m, n, NAUTYVERSIONID);
 
-    DYNALLOC1(int,lab1,lab1_sz,n,"malloc");
-    DYNALLOC1(int,lab2,lab2_sz,n,"malloc");
-    DYNALLOC1(int,ptn1,ptn_sz1,n,"malloc");
-    DYNALLOC1(int,ptn2,ptn_sz2,n,"malloc");
+//    DYNALLOC1(int,lab1,lab1_sz,n,"malloc");
+//    DYNALLOC1(int,lab2,lab2_sz,n,"malloc");
+//    DYNALLOC1(int,ptn1,ptn_sz1,n,"malloc");
+//    DYNALLOC1(int,ptn2,ptn_sz2,n,"malloc");
     DYNALLOC1(int,orbits,orbits_sz,n,"malloc");
     DYNALLOC1(int,map,map_sz,n,"malloc");
     DYNALLOC2(graph,g1,g1_sz,n,m,"malloc");
@@ -176,18 +178,28 @@ main(int argc, char *argv[])
 
     char *lab_fn1 = argv[4];
     char *lab_fn2 = argv[5];
+    int lab1[s1.n_nodes];
+    int ptn1[s1.n_nodes];
+    int lab2[s2.n_nodes];
+    int ptn2[s2.n_nodes];
     read_labels(lab_fn1, lab1, ptn1);
     read_labels(lab_fn2, lab2, ptn2);
+    printf("Label 1 %d %d\n", s1.n_nodes, s1.n_edges);
     for (i=0; i < s1.n_nodes; i+=1) {
         printf("%d %d\n", lab1[i], ptn1[i]);
+    }
+    printf("Label 2 %d %d\n", s2.n_nodes, s2.n_edges);
+    for (i=0; i < s2.n_nodes; i+=1) {
+        printf("%d %d\n", lab2[i], ptn2[i]);
     }
 
  /* Label g1, result in cg1 and labelling in lab1; similarly g2.
     It is not necessary to pre-allocate space in cg1 and cg2, but
     they have to be initialised as we did above.  */
 
+    options.defaultptn = FALSE;
     densenauty(g1,lab1,ptn1,orbits,&options,&stats,m, n,cg1);
-    densenauty(g2,lab2,ptn1,orbits,&options,&stats,m, n,cg2);
+    densenauty(g2,lab2,ptn2,orbits,&options,&stats,m, n,cg2);
 
  /* Compare canonically labelled graphs */
     if (memcmp(cg1,cg2,m*sizeof(graph)*n) == 0)
@@ -195,9 +207,9 @@ main(int argc, char *argv[])
         FILE *file = fopen (outf, "w");
         fprintf(file, "%s %s %d\n", file1, file2, 1);
 
-        exit(0);
+//        exit(0);
 
-//        printf("Isomorphic. %s %s\n", file1, file2);
+        printf("Isomorphic. %s %s\n", file1, file2);
 //        if (n <= 1000)
 //        {
 //         /* Write the isomorphism.  For each i, vertex lab1[i]
@@ -211,9 +223,9 @@ main(int argc, char *argv[])
         fclose(file);
     }
     else {
-//        printf("Not isomorphic.\n");
+        printf("Not isomorphic.\n");
 //        fprintf(file, "%s %s %d\n", file1, file2, 0);
-        exit(0);
+//        exit(0);
     }
 
 
