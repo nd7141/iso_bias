@@ -1,0 +1,62 @@
+from gin.constants import BIO, SOCIAL
+import argparse
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description='Graph')
+
+    parser.add_argument(
+        '--dataset', type=str,
+        default='MUTAG',
+        help='Dataset to train on')
+
+    parser.add_argument(
+        '--dir', type=str,
+        default='./Datasets',
+        help='Directory to save datasets to')
+
+    parser.add_argument(
+        '--num_epochs', type=int,
+        default=500,
+        help='Number of epochs to train for')
+
+    parser.add_argument(
+        '--batch_size', type=int,
+        default=32,
+        help='Batch size')
+
+    parser.add_argument(
+        '-lr', type=int,
+        default=0.01,
+        help='Learning rate')
+
+    parser.add_argument(
+        '--randomize',
+        type=int,
+        default=None,
+        help='Size of random node feature vector')
+
+    parser.add_argument(
+        '--dropout',
+        type=float,
+        default=0.5,
+        help='Dropout ratio')
+
+    parser.add_argument(
+        '--hidden',
+        type=int,
+        default=32,
+        help='Hidden size')
+
+    parser.add_argument(
+        '--split',
+        type=float,
+        default=0.8,
+        help='Train share')
+
+    args = parser.parse_args()
+
+    assert args.dataset in BIO+SOCIAL, \
+        "This dataset is not currently supported or doesn't exist."
+
+    return args
