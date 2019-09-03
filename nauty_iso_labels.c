@@ -104,7 +104,8 @@ main(int argc, char *argv[])
     char *file2 = argv[2];
     char *outf = argv[3];
 
-    FILE *file = fopen (outf, "a" );
+//    FILE *file = fopen (outf, "a" );
+
 //    printf("Files %s %s\n", file1, file2);
 
 

@@ -161,7 +161,7 @@ main(int argc, char *argv[])
         FILE *file = fopen (outf, "w");
         fprintf(file, "%s %s %d\n", file1, file2, 1);
 
-        exit(0);
+//        exit(0);
 
 //        printf("Isomorphic. %s %s\n", file1, file2);
 //        if (n <= 1000)
