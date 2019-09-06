@@ -51,68 +51,68 @@ if __name__ == '__main__':
 
     use_node_labels = True
     compute_groups = True
-    results_dir = 'results_node_labels/'
+    results_dir = 'results_no_labels/'
 
     # experiment: write genrators for each graph
     # https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets#contact
     dataset = 'REDDIT-BINARY'
     ds = [
-        'FIRSTMM_DB',
-        'OHSU',
-        'KKI',
-        'Peking_1',
-        'MUTAG',
-        'MSRC_21C',
-        'MSRC_9',
-        'Cuneiform',
-        'SYNTHETIC',
-        'COX2_MD',
-        'BZR_MD',
-        'PTC_MM',
-        'PTC_MR',
-        'PTC_FM',
-        'PTC_FR',
-        'DHFR_MD',
-        'Synthie',
-        'BZR',
-        'ER_MD',
-        'COX2',
-        'MSRC_21',
-        'ENZYMES',
-        'DHFR',
-        'IMDB-BINARY',
-        'PROTEINS',
-        'DD',
-        'IMDB-MULTI',
-        'AIDS',
-        'REDDIT-BINARY',
-        'Letter-high',
-        'Letter-low',
-        'Letter-med',
-        'Fingerprint',
-        'COIL-DEL',
-        'COIL-RAG',
-        'NCI1',
-        'NCI109',
-        'FRANKENSTEIN',
-        'Mutagenicity',
-        'REDDIT-MULTI-5K',
-        'COLLAB',
-        'Tox21_ARE',
-        'Tox21_aromatase',
-        'Tox21_MMP',
-        'Tox21_ER',
-        'Tox21_HSE',
-        'Tox21_AHR',
-        'Tox21_PPAR-gamma',
-        'Tox21_AR-LBD',
-        'Tox21_p53',
+        # 'FIRSTMM_DB',
+        # 'OHSU',
+        # 'KKI',
+        # 'Peking_1',
+        # 'MUTAG',
+        # 'MSRC_21C',
+        # 'MSRC_9',
+        # 'Cuneiform',
+        # 'SYNTHETIC',
+        # 'COX2_MD',
+        # 'BZR_MD',
+        # 'PTC_MM',
+        # 'PTC_MR',
+        # 'PTC_FM',
+        # 'PTC_FR',
+        # 'DHFR_MD',
+        # 'Synthie',
+        # 'BZR',
+        # 'ER_MD',
+        # 'COX2',
+        # 'MSRC_21',
+        # 'ENZYMES',
+        # 'DHFR',
+        # 'IMDB-BINARY',
+        # 'PROTEINS',
+        # 'DD',
+        # 'IMDB-MULTI',
+        # 'AIDS',
+        # 'REDDIT-BINARY',
+        # 'Letter-high',
+        # 'Letter-low',
+        # 'Letter-med',
+        # 'Fingerprint',
+        # 'COIL-DEL',
+        # 'COIL-RAG',
+        # 'NCI1',
+        # 'NCI109',
+        # 'FRANKENSTEIN',
+        # 'Mutagenicity',
+        # 'REDDIT-MULTI-5K',
+        # 'COLLAB',
+        # 'Tox21_ARE',
+        # 'Tox21_aromatase',
+        # 'Tox21_MMP',
+        # 'Tox21_ER',
+        # 'Tox21_HSE',
+        # 'Tox21_AHR',
+        # 'Tox21_PPAR-gamma',
+        # 'Tox21_AR-LBD',
+        # 'Tox21_p53',
         'Tox21_ER_LBD',
         'Tox21_ATAD5',
         'Tox21_AR',
         'REDDIT-MULTI-12K'
     ]
-    # ds = ['MUTAG']
+    ds = ['Cuneiform']
 
     for dataset in ds:
         print(dataset)
@@ -146,6 +146,9 @@ if __name__ == '__main__':
         indir = f'datasets/data_adj/{dataset}_adj/'
 
         outdir = f'{results_dir}/{dataset}_iso/'
+        if (not os.path.exists(indir + f"1.node_labels") and use_node_labels):
+            print(f"Files for node labels is not present but use_node_labels=True. Skip the dataset {dataset}")
+            continue
         os.makedirs(outdir, exist_ok=True)
 
         outf = f'{results_dir}/{dataset}_iso.txt'
@@ -164,8 +167,6 @@ if __name__ == '__main__':
         N = len(fns)
         ids = []
         start = time.time()
-
-
 
         f = partial(run_nauty, use_node_labels=use_node_labels)  # function to call executable
 

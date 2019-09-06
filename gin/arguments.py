@@ -1,4 +1,4 @@
-from gin.constants import BIO, SOCIAL
+from constants import BIO, SOCIAL
 import argparse
 
 
@@ -9,6 +9,10 @@ def get_args():
         '--dataset', type=str,
         default='MUTAG',
         help='Dataset to train on')
+
+    parser.add_argument(
+        '--provided_idx', default=False, action='store_true', dest='provided_idx',
+        help='Provided index of graphs in dataset')
 
     parser.add_argument(
         '--dir', type=str,
@@ -34,7 +38,13 @@ def get_args():
         '--randomize',
         type=int,
         default=None,
-        help='Size of random node feature vector')
+        help='If randomize node features (size of vector)')
+
+    parser.add_argument(
+        '--initialize_node_features',
+        type=int,
+        default=None,
+        help='Whether to force initialization of ')
 
     parser.add_argument(
         '--dropout',
