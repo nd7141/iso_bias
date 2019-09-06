@@ -39,15 +39,8 @@ def main(args):
 
             dataset.transform = OneHotDegree(max_degree=max_degree, cat=False)
 
-    # if dataset.num_features == 0:
-    #     dataset.transform = Random()
-    # elif args.randomize:
-    #     dataset.transform = Random(vector_size=args.randomize)
-
-
-
-    print("Use clean dataset: {}".format(bool(args.provided_idx)))
-    if args.provided_idx:
+    print("Use clean dataset: {}".format(bool(args.clean_dataset)))
+    if args.clean_dataset:
         graph_idx = get_clean_graph_indices(args.dataset)
         dataset_size = len(graph_idx)
         print(f"Dataset size: {len(dataset)} -> {dataset_size}")
@@ -58,14 +51,18 @@ def main(args):
         shuffled_idx = list(range(dataset_size))
         print(f"Dataset size: {len(dataset)}")
 
+    print('Class labels:', Counter([int(dataset[int(idx)].y) for idx in shuffled_idx]))
+
     global_train_acc = []
     global_test_acc = []
     global_loss = []
     kf = KFold(10, shuffle=True)
+    pos2idx = dict(enumerate(shuffled_idx))
 
-    for train_index, test_index in kf.split(shuffled_idx):
-        test_dataset = [dataset[int(idx)] for idx in test_index]
-        train_dataset = [dataset[int(idx)] for idx in train_index]
+    for xval, (train_index, test_index) in enumerate(kf.split(shuffled_idx)):
+
+        test_dataset = [dataset[pos2idx[idx]] for idx in test_index]
+        train_dataset = [dataset[pos2idx[idx]] for idx in train_index]
 
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
         test_loader = DataLoader(test_dataset, batch_size=args.batch_size)
@@ -107,8 +104,8 @@ def main(args):
             train_acc = test(model, train_loader, device)
             test_acc = test(model, test_loader, device)
 
-            print('Epoch: {:03d}, Train Loss: {:.7f}, '
-                  'Train Acc: {:.7f}, Test Acc: {:.7f}'.format(epoch, train_loss,
+            print('Xval: {:03d}, Epoch: {:03d}, Train Loss: {:.7f}, '
+                  'Train Acc: {:.7f}, Test Acc: {:.7f}'.format(xval, epoch, train_loss,
                                                                train_acc, test_acc))
             global_loss.append(train_loss)
             global_train_acc.append(train_acc)
@@ -120,7 +117,7 @@ def main(args):
           'Average Train Acc: {:.4f}+-{:.4f}\n Average Test Acc: {:.4f}+-{:.4f}'.format(lm, ls, trm, trs, tem, tes)
           )
     with open('../gnn_results/results.txt', 'a+') as f:
-        print("gin {} {} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f}".format(int(args.provided_idx), args.dataset, lm, ls, trm, trs, tem, tes), file=f)
+        print("gin {} {} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f}".format(int(args.clean_dataset), args.dataset, lm, ls, trm, trs, tem, tes), file=f)
 
 
 def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/orbits/',
@@ -160,7 +157,6 @@ def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/o
     for orbit in true_orbits:
         iso_graphs = iso_graphs.union(orbit)
 
-    print(len(iso_graphs), len(iso_graphs.difference(orbit_graphs)), len(true_orbits))
     iso_graphs = iso_graphs.difference(orbit_graphs)
 
     graph_idx = []
@@ -173,10 +169,10 @@ def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/o
 
 if __name__ == "__main__":
     args = get_args()
-    args.dataset = 'IMDB-MULTI'
+    # args.dataset = 'IMDB-MULTI'
     # args.num_epochs = 2
-    # args.provided_idx = True
-    args.initialize_node_features = 1
+    # args.clean_dataset = True
+    # args.initialize_node_features = True
     main(args)
 
     console = []

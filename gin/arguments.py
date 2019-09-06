@@ -11,8 +11,8 @@ def get_args():
         help='Dataset to train on')
 
     parser.add_argument(
-        '--provided_idx', default=False, action='store_true', dest='provided_idx',
-        help='Provided index of graphs in dataset')
+        '--clean_dataset', default=False, action='store_true', dest='clean_dataset',
+        help='Clean dataset')
 
     parser.add_argument(
         '--dir', type=str,
