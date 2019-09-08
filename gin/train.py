@@ -1,11 +1,12 @@
 import numpy as np
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.datasets import TUDataset
 from torch_geometric.data import DataLoader
 from arguments import get_args
 from transformers import Random
-from models import GCN
+from models import GCN, GraphCNN
 from utils import test
 
 import ast
@@ -80,7 +81,11 @@ def main(args):
             classes = classes.union(list(map(int, b.y)))
         print('Possible test classes', classes)
 
-        model = GCN(dataset.num_features, dataset.num_classes, args.hidden, args.dropout).to(device)
+        #model = GCN(dataset.num_features, dataset.num_classes, args.hidden, args.dropout).to(device)
+
+        model = GraphCNN(5, 2, dataset.num_features, 64, 
+                        dataset.num_classes, 0.5, False, 
+                        "sum", "sum", device).to(device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
@@ -96,7 +101,7 @@ def main(args):
             for data in train_loader:
                 data = data.to(device)
                 optimizer.zero_grad()
-                output = model(data.x, data.edge_index, data.batch)
+                output = model(data)
                 loss = F.nll_loss(output, data.y)
                 loss.backward()
                 train_loss += loss.item() * data.num_graphs
@@ -173,7 +178,7 @@ def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/o
 
 if __name__ == "__main__":
     args = get_args()
-    args.dataset = 'IMDB-MULTI'
+    args.dataset = 'PROTEINS'
     # args.num_epochs = 2
     # args.provided_idx = True
     args.initialize_node_features = 1
