@@ -65,8 +65,8 @@ def main(args):
         test_dataset = [dataset[pos2idx[idx]] for idx in test_index]
         train_dataset = [dataset[pos2idx[idx]] for idx in train_index]
 
-        train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
-        test_loader = DataLoader(test_dataset, batch_size=args.batch_size)
+        train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+        test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True)
 
         classes = set()
         for b in train_loader:
@@ -174,8 +174,8 @@ def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/o
 
 if __name__ == "__main__":
     args = get_args()
-    # args.dataset = 'IMDB-MULTI'
-    # args.num_epochs = 2
+    # args.dataset = 'IMDB-BINARY'
+    # args.num_epochs = 350
     # args.clean_dataset = True
     # args.initialize_node_features = True
     main(args)

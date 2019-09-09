@@ -102,6 +102,22 @@ def convert_dortmund_to_graphml(folder):
                     print('Finished {} dataset'.format(current_graph - 1))
 
             edges.append((u, v))
+
+    # write last graph
+    G = nx.Graph()
+    G.add_edges_from(edges)
+    G = formatg(G)
+    if node_labels_fn:
+        node_labels = [next(node_labels_f) for _ in range(len(G))]
+    if edge_labels_fn:
+        edge_labels = [int(next(edge_labels_f)) for _ in range(2 * len(G.edges()))]
+    # print(len(G.edges()), len(G.nodes()), len(set(edges)), len(G)*(len(G)-1)/2)
+    writeg(G, output_folder + 'graph_{}.adj'.format(current_graph))
+    if node_labels_fn:
+        write_node_labels(output_folder + '{}.node_labels'.format(current_graph), node_labels)
+    # if edge_labels_fn:
+    #     write_edge_labels(edges, output_folder + '{}.edge_labels'.format(current_graph), edge_labels)
+
     if node_labels_fn:
         node_labels_f.close()
     if edge_labels_fn:
@@ -120,61 +136,61 @@ if __name__ == "__main__":
 
     dataset = 'COLLAB'
     ds = [
-        # 'FIRSTMM_DB',
-        #   'OHSU',
-        #   'KKI',
-        #   'Peking_1',
-        #   'MUTAG',
-        #   'MSRC_21C',
-        #   'MSRC_9',
+        'FIRSTMM_DB',
+          'OHSU',
+          'KKI',
+          'Peking_1',
+          'MUTAG',
+          'MSRC_21C',
+          'MSRC_9',
           'Cuneiform',
-          # 'SYNTHETIC',
-          # 'COX2_MD',
-          # 'BZR_MD',
-          # 'PTC_MM',
-          # 'PTC_MR',
-          # 'PTC_FM',
-          # 'PTC_FR',
-          # 'DHFR_MD',
-          # 'Synthie',
-          # 'BZR',
-          # 'ER_MD',
-          # 'COX2',
-          # 'MSRC_21',
-          # 'ENZYMES',
-          # 'DHFR',
-          # 'IMDB-BINARY',
-          # 'PROTEINS',
-          # 'DD',
-          # 'IMDB-MULTI',
-          # 'AIDS',
-          # 'REDDIT-BINARY',
-          # 'Letter-high',
-          # 'Letter-low',
-          # 'Letter-med',
-          # 'Fingerprint',
-          # 'COIL-DEL',
-          # 'COIL-RAG',
-          # 'NCI1',
-          # 'NCI109',
-          # 'FRANKENSTEIN',
-          # 'Mutagenicity',
-          # 'REDDIT-MULTI-5K',
-          # 'COLLAB',
-          # 'Tox21_ARE',
-          # 'Tox21_aromatase',
-          # 'Tox21_MMP',
-          # 'Tox21_ER',
-          # 'Tox21_HSE',
-          # 'Tox21_AHR',
-          # 'Tox21_PPAR-gamma',
-          # 'Tox21_AR-LBD',
-          # 'Tox21_p53',
-          # 'Tox21_ER_LBD',
-          # 'Tox21_ATAD5',
-          # 'Tox21_AR',
-          # 'REDDIT-MULTI-12K',
-          # 'DBLP_v1'
+          'SYNTHETIC',
+          'COX2_MD',
+          'BZR_MD',
+          'PTC_MM',
+          'PTC_MR',
+          'PTC_FM',
+          'PTC_FR',
+          'DHFR_MD',
+          'Synthie',
+          'BZR',
+          'ER_MD',
+          'COX2',
+          'MSRC_21',
+          'ENZYMES',
+          'DHFR',
+          'IMDB-BINARY',
+          'PROTEINS',
+          'DD',
+          'IMDB-MULTI',
+          'AIDS',
+          'REDDIT-BINARY',
+          'Letter-high',
+          'Letter-low',
+          'Letter-med',
+          'Fingerprint',
+          'COIL-DEL',
+          'COIL-RAG',
+          'NCI1',
+          'NCI109',
+          'FRANKENSTEIN',
+          'Mutagenicity',
+          'REDDIT-MULTI-5K',
+          'COLLAB',
+          'Tox21_ARE',
+          'Tox21_aromatase',
+          'Tox21_MMP',
+          'Tox21_ER',
+          'Tox21_HSE',
+          'Tox21_AHR',
+          'Tox21_PPAR-gamma',
+          'Tox21_AR-LBD',
+          'Tox21_p53',
+          'Tox21_ER_LBD',
+          'Tox21_ATAD5',
+          'Tox21_AR',
+          'REDDIT-MULTI-12K',
+          'DBLP_v1'
     ]
     # ds = ['MUTAG']
     for dataset in ds:
