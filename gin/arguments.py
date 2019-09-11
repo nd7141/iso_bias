@@ -15,6 +15,11 @@ def get_args():
         help='Clean dataset')
 
     parser.add_argument(
+        '--orbits_path', type=str,
+        default='../results_no_labels/orbits/',
+        help='Path to orbits')
+
+    parser.add_argument(
         '--dir', type=str,
         default='./Datasets',
         help='Directory to save datasets to')
@@ -23,6 +28,11 @@ def get_args():
         '--num_epochs', type=int,
         default=350,
         help='Number of epochs to train for')
+
+    parser.add_argument(
+        '--num_kfold', type=int,
+        default=10,
+        help='Number of k folds')
 
     parser.add_argument(
         '--batch_size', type=int,
@@ -63,6 +73,7 @@ def get_args():
         type=float,
         default=0.8,
         help='Train share')
+
 
     args = parser.parse_args()
 

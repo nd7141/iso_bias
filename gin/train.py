@@ -1,3 +1,6 @@
+import os
+import shutil
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -11,13 +14,78 @@ from utils import test
 
 import ast
 import copy
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, train_test_split
 from collections import Counter
 from torch_geometric.transforms.one_hot_degree import OneHotDegree
 
 torch.set_num_threads(20)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
+def get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, dataset):
+    '''Function returns indices and labels of graphs in the test that have
+    isomorphic graphs in the train such that the whole orbit for this graph
+    has the same label.
+    '''
+    # getting index of iso graphs in the test
+    iso_graphs = [x - 1 for orb in orbits for x in orb]
+    iso_test = set()
+    for orb in orbits:
+        new_orb = [x - 1 for x in orb]
+        # at least one isomorphic graph is present in train
+        if len(set(train_graph_idx).intersection(new_orb)) > 0:
+            # add intersection of isomorphic graphs with the test idx
+            iso_test.update(set(test_graph_idx).intersection(new_orb))
+    iso_train = set(train_graph_idx).intersection(iso_graphs)
+
+    # get orbits for which train and test iso exists
+    iso_train_orbits_graphs = []
+    iso_test_keep = []
+    for graph in iso_test:
+        for orb in orbits:
+            new_orb = [x - 1 for x in orb]
+            if graph in new_orb:
+                # check the number of labels in orbit
+                orb_labels = set([dataset[graph].y.item() for graph in new_orb])
+                if len(orb_labels) == 1:
+                    # keep orbit
+                    iso_train_orbits_graphs.append(new_orb)
+                    iso_test_keep.append(graph)
+                break
+    iso_test_idx = [test_graph_idx.index(graph_idx) for graph_idx in iso_test_keep]
+    print('Iso train {}, test {}, total {}'.format(len(iso_train), len(iso_test_keep), len(iso_graphs)))
+
+    # select graphs orbits in the train
+    iso_train_orbits_idx = [set(train_graph_idx).intersection(orb) for orb in iso_train_orbits_graphs]
+    # select the most popular label from the train orbit
+    iso_labels = [Counter([dataset[idx].y.item() for idx in orb_idx]).most_common(1)[0][0] for orb_idx in iso_train_orbits_idx]
+    return iso_test_idx, iso_labels
+
+
+def get_dataset_classes(loader):
+    classes = []
+    for b in loader:
+        classes += list(map(int, b.y))
+    return Counter(classes)
+
+
+def test_model(model, loader, device, iso_test_idx, iso_labels=None):
+    model.eval()
+
+    correct = 0
+    iso_correct = 0
+    for data in loader:
+        data = data.to(device)
+        output = model(data)
+        pred = output.max(dim=1)[1]
+        if iso_labels is not None:  # replace some of the labels
+            tmp = pred.numpy()
+            tmp[iso_test_idx] = iso_labels
+            pred = torch.tensor(tmp)
+        correct += pred.eq(data.y).sum().item()
+        iso_correct += pred[iso_test_idx].eq(data.y[iso_test_idx]).sum().item()
+    return correct / len(loader.dataset), iso_correct / len(iso_test_idx)
 
 
 def main(args):
@@ -41,8 +109,9 @@ def main(args):
             dataset.transform = OneHotDegree(max_degree=max_degree, cat=False)
 
     print("Use clean dataset: {}".format(bool(args.clean_dataset)))
+    graph_idx, orbits = get_clean_graph_indices(args.dataset, path_to_orbits=args.orbits_path)
+    print('Found {} orbits from {}'.format(len(orbits), args.orbits_path))
     if args.clean_dataset:
-        graph_idx = get_clean_graph_indices(args.dataset)
         dataset_size = len(graph_idx)
         print(f"Dataset size: {len(dataset)} -> {dataset_size}")
         shuffled_idx = copy.deepcopy(graph_idx)
@@ -56,37 +125,58 @@ def main(args):
 
     global_train_acc = []
     global_test_acc = []
+    global_test_acc_iso = []
+    global_test_acc2 = []
+    global_test_acc_iso2 = []
     global_loss = []
-    kf = KFold(10, shuffle=True)
+    epoch_trains = []
+    epoch_vals = []
+    epoch_tests = []
+
+    kf = KFold(args.num_kfold, shuffle=True)  # 20% for test size
     pos2idx = dict(enumerate(shuffled_idx))
 
     for xval, (train_index, test_index) in enumerate(kf.split(shuffled_idx)):
 
         test_dataset = [dataset[pos2idx[idx]] for idx in test_index]
-        train_dataset = [dataset[pos2idx[idx]] for idx in train_index]
+        train_val_dataset = [dataset[pos2idx[idx]] for idx in train_index]
+
+        test_graph_idx = [pos2idx[idx] for idx in test_index]
+        train_graph_idx = [pos2idx[idx] for idx in train_index]
+
+        # split on train and val
+        train_dataset, val_dataset = train_test_split(train_val_dataset, test_size=0.2)
 
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
-        test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=len(val_dataset))
+        test_loader = DataLoader(test_dataset, batch_size=len(test_dataset))
 
-        classes = set()
-        for b in train_loader:
-            classes = classes.union(list(map(int, b.y)))
-        print('Possible train classes', classes)
+        print(len(train_dataset), len(val_dataset), len(test_dataset))
 
-        classes = set()
-        for b in test_loader:
-            classes = classes.union(list(map(int, b.y)))
-        print('Possible test classes', classes)
+        iso_test_idx, iso_test_labels = get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, dataset)
 
-        #model = GCN(dataset.num_features, dataset.num_classes, args.hidden, args.dropout).to(device)
+        print('Possible train classes', get_dataset_classes(train_loader))
+        print('Possible val classes', get_dataset_classes(val_loader))
+        print('Possible test classes', get_dataset_classes(test_loader))
 
-        model = GraphCNN(5, 2, dataset.num_features, 64, 
-                        dataset.num_classes, 0.5, False, 
-                        "sum", "sum", device).to(device)
+        # model = GCN(dataset.num_features, dataset.num_classes, args.hidden, args.dropout).to(device)
+
+        model = GraphCNN(5, 2, dataset.num_features, 64,
+                         dataset.num_classes, 0.5, False,
+                         "sum", "sum", device).to(device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
-        for epoch in range(1, args.num_epochs):
+        best_score = -1
+        best_model = None
+
+        epoch_train = []
+        epoch_val = []
+        epoch_test = []
+
+        print('Running {} epochs'.format(args.num_epochs))
+
+        for epoch in range(1, args.num_epochs + 1):
 
             model.train()
 
@@ -107,22 +197,62 @@ def main(args):
             train_loss = train_loss / len(train_dataset)
 
             train_acc = test(model, train_loader, device)
+            val_acc = test(model, val_loader, device)
             test_acc = test(model, test_loader, device)
 
-            print('Xval: {:03d}, Epoch: {:03d}, Train Loss: {:.7f}, '
-                  'Train Acc: {:.7f}, Test Acc: {:.7f}'.format(xval, epoch, train_loss,
-                                                               train_acc, test_acc))
-            global_loss.append(train_loss)
-            global_train_acc.append(train_acc)
-            global_test_acc.append(test_acc)
+            epoch_train.append(train_acc)
+            epoch_val.append(val_acc)
+            epoch_test.append(test_acc)
 
-    lm, ls, trm, trs, tem, tes = np.mean(global_loss), np.std(global_loss), np.mean(global_train_acc), np.std(
-        global_train_acc), np.mean(global_test_acc), np.std(global_test_acc)
-    print('After 10-Fold XVal: Average Train Loss: {:.4f} +- {:.4f}\n'
-          'Average Train Acc: {:.4f}+-{:.4f}\n Average Test Acc: {:.4f}+-{:.4f}'.format(lm, ls, trm, trs, tem, tes)
-          )
+            if val_acc > best_score and epoch >= 50:
+                best_score = val_acc
+                best_test_score = test_acc
+                best_epoch = epoch
+                best_model = copy.deepcopy(model)
+
+            print('Xval: {:03d}, Epoch: {:03d}, Train Loss: {:.4f}, '
+                  'Train Acc: {:.4f}, Val Acc: {:.4f}, Test Acc: {:.4f}'.format(xval, epoch, train_loss,
+                                                                                train_acc, val_acc, test_acc))
+
+        test_acc, test_acc_iso = test_model(best_model, test_loader, device, iso_test_idx)
+        test_acc2, test_acc_iso2 = test_model(best_model, test_loader, device, iso_test_idx, iso_test_labels)
+        print('Xval {:03d} Best model accuracy on test {:.4f} vs {:.4f} ({:.4f} {})'.format(xval, test_acc,
+                                                                                            best_test_score, best_score,
+                                                                                            best_epoch))
+        global_test_acc.append(test_acc)
+        global_test_acc_iso.append(test_acc_iso)
+        global_test_acc2.append(test_acc2)
+        global_test_acc_iso2.append(test_acc_iso2)
+
+        epoch_trains.append(epoch_train)
+        epoch_vals.append(epoch_val)
+
+    with open('../gnn_results/epochs_{}.txt'.format(args.dataset), 'w') as f:
+        print(epoch_trains, file=f)
+        print(epoch_vals, file=f)
+        print(epoch_tests, file=f)
+
+    test_mean, test_std = np.mean(global_test_acc), np.std(global_test_acc)
+    test_iso_mean, test_iso_std = np.mean(global_test_acc_iso), np.std(global_test_acc_iso)
+    test_mean2, test_std2 = np.mean(global_test_acc2), np.std(global_test_acc2)
+    test_iso_mean2, test_iso_std2 = np.mean(global_test_acc_iso2), np.std(global_test_acc_iso2)
+    print(
+        'After 10-Fold XVal: Model-1 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean, test_std,
+                                                                                                   test_iso_mean,
+                                                                                                   test_iso_std))
+    print('After 10-Fold XVal: Model-2 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean2,
+                                                                                                     test_std2,
+                                                                                                     test_iso_mean2,
+                                                                                                     test_iso_std2))
     with open('../gnn_results/results.txt', 'a+') as f:
-        print("gin {} {} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f}".format(int(args.clean_dataset), args.dataset, lm, ls, trm, trs, tem, tes), file=f)
+        print("model-1 gin {} {} {:.6f} {:.6f} {}".format(int(args.clean_dataset), args.dataset, test_mean, test_std,
+                                                  test_iso_mean, test_iso_std, global_test_acc, global_test_acc_iso),
+              file=f)
+        print("model-2 gin {} {} {:.6f} {:.6f} {}".format(int(args.clean_dataset), args.dataset, test_mean2, test_std2,
+                                                  test_iso_mean2, test_iso_std2, global_test_acc2, global_test_acc_iso2),
+              file=f)
+
+    return best_model
 
 
 def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/orbits/',
@@ -164,18 +294,15 @@ def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/o
 
     iso_graphs = iso_graphs.difference(orbit_graphs)
 
-    graph_idx = []
-    for i in range(len(dataset)):
-        if i + 1 not in iso_graphs:
-            graph_idx.append(i)
+    clean_graph_idx = [idx for idx in range(len(dataset)) if i + 1 not in iso_graphs]
 
-    return graph_idx
+    return clean_graph_idx, true_orbits
 
 
 if __name__ == "__main__":
     args = get_args()
-    # args.dataset = 'IMDB-BINARY'
-    # args.num_epochs = 350
+    # args.dataset = 'MUTAG'
+    # args.num_epochs = 100
     # args.clean_dataset = True
     # args.initialize_node_features = True
     main(args)
