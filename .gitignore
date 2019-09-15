@@ -5,3 +5,5 @@ iso
 gr
 .idea
 __pycache__
+.DS_Store
+kernels/src/gkernel

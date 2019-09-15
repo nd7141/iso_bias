@@ -1,0 +1,30 @@
+import argparse
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description='Kernels')
+
+    parser.add_argument(
+        '--dataset', type=str,
+        default='MUTAG',
+        help='Dataset to train on')
+
+    parser.add_argument(
+        '--dir', type=str,
+        default='./Datasets',
+        help='Directory to save datasets to')
+
+    parser.add_argument(
+        '--kernel', type=str,
+        default='WL',
+        help='An abbreviated kernel name')
+
+    parser.add_argument(
+        '--parameter', type=str,
+        default='5',
+        help='Parameter(s) in a kernel')
+
+
+    args = parser.parse_args()
+
+    return args
