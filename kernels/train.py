@@ -21,7 +21,7 @@ def main(args):
             if max_degree < max(degrees.values()):
                 max_degree = max(degrees.values())
 
-            dataset.transform = OneHotDegree(max_degree=max_degree, cat=False)
+        dataset.transform = OneHotDegree(max_degree=max_degree, cat=False)
 
     path = pathlib.Path(f'{args.dir}/GraphML/{args.dataset}/{args.dataset.lower()}_{args.kernel}.kernel')
     if not path.is_file():
