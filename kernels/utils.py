@@ -1,12 +1,40 @@
-from igraph import Graph
+# from igraph import Graph
 import numpy as np
 import os
 import random
 from sklearn import svm
 from sklearn.metrics import accuracy_score
 import pathlib
+import networkx as nx
 
 def save_to_graphml(dataset, path):
+    names = []
+    dataset_name = dataset.name.lower()
+    for i, graph in enumerate(dataset):
+
+        g = nx.Graph()
+        # adding (attributed) edges
+        if graph.num_edge_features == 0:
+            g.add_edges_from(zip(*graph.edge_index.numpy()))
+        else:
+            ex, ey = np.where(graph.edge_attr == 1)
+            edge_attributes = np.vstack((graph.edge_index.numpy(), ey + 1))
+            g.add_weighted_edges_from(zip(*edge_attributes), weight='e_label')
+
+        # adding node attributes
+        vx, vy = np.where(graph.x == 1)
+        node_attributes = dict(zip(vx, vy + 1))
+        nx.set_node_attributes(g, node_attributes, 'v_label')
+
+        name = f'{dataset_name}_{i+1}.graphml'
+        names.append(name)
+        pathlib.Path(f'{path}/data').mkdir(parents=True, exist_ok=True)
+        nx.write_graphml(g, f'{path}/data/{name}')
+    with open(f'{path}/{dataset_name}.list', 'w') as f:
+        for name in names:
+            f.write(f'{name}\n')
+
+def save_to_graphml2(dataset, path):
     names = []
     dataset_name = dataset.name.lower()
     for i, graph in enumerate(dataset):

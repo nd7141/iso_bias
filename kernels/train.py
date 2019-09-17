@@ -50,4 +50,6 @@ def main(args):
 
 if __name__ == "__main__":
     args = get_args()
+    args.dataset = 'MUTAG'
+    args.kernel = 'WL'
     main(args)
