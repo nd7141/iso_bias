@@ -23,7 +23,7 @@ torch.set_num_threads(20)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-def get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, dataset):
+def get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, dataset, homogeneous=False):
     '''Function returns indices and labels of graphs in the test that have
     isomorphic graphs in the train such that the whole orbit for this graph
     has the same label.
@@ -48,7 +48,10 @@ def get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, dataset):
             if graph in new_orb:
                 # check the number of labels in orbit
                 orb_labels = set([dataset[graph].y.item() for graph in new_orb])
-                if len(orb_labels) == 1:
+                if not homogeneous:
+                    iso_train_orbits_graphs.append(new_orb)
+                    iso_test_keep.append(graph)
+                elif len(orb_labels) == 1:
                     # keep orbit
                     iso_train_orbits_graphs.append(new_orb)
                     iso_test_keep.append(graph)
@@ -85,7 +88,7 @@ def test_model(model, loader, device, iso_test_idx, iso_labels=None):
             pred = torch.tensor(tmp)
         correct += pred.eq(data.y).sum().item()
         iso_correct += pred[iso_test_idx].eq(data.y[iso_test_idx]).sum().item()
-    return correct / len(loader.dataset), iso_correct / len(iso_test_idx)
+    return correct / len(loader.dataset), iso_correct / len(iso_test_idx) if len(iso_test_idx) else 1
 
 
 def main(args):
@@ -111,6 +114,10 @@ def main(args):
     print("Use clean dataset: {}".format(bool(args.clean_dataset)))
     graph_idx, orbits = get_clean_graph_indices(args.dataset, path_to_orbits=args.orbits_path)
     print('Found {} orbits from {}'.format(len(orbits), args.orbits_path))
+    if args.orbits_path2:
+        graph_idx2, orbits2 = get_clean_graph_indices(args.dataset, path_to_orbits=args.orbits_path2)
+        print('Found {} orbits from {}'.format(len(orbits2), args.orbits_path2))
+
     if args.clean_dataset:
         dataset_size = len(graph_idx)
         print(f"Dataset size: {len(dataset)} -> {dataset_size}")
@@ -128,6 +135,22 @@ def main(args):
     global_test_acc_iso = []
     global_test_acc2 = []
     global_test_acc_iso2 = []
+    global_test_acc3 = []
+    global_test_acc_iso3 = []
+    global_test_acc4 = []
+    global_test_acc_iso4 = []
+
+    if args.orbits_path2:
+        global_test_acc5 = []
+        global_test_acc_iso5 = []
+        global_test_acc6 = []
+        global_test_acc_iso6 = []
+        global_test_acc7 = []
+        global_test_acc_iso7 = []
+        global_test_acc8 = []
+        global_test_acc_iso8 = []
+
+
     global_loss = []
     epoch_trains = []
     epoch_vals = []
@@ -153,7 +176,13 @@ def main(args):
 
         print(len(train_dataset), len(val_dataset), len(test_dataset))
 
-        iso_test_idx, iso_test_labels = get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, dataset)
+        iso_test_idx, iso_test_labels = get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, dataset, homogeneous=True)
+        iso_test_idx3, iso_test_labels3 = get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, dataset, homogeneous=False)
+        if args.orbits_path2:
+            iso_test_idx5, iso_test_labels5 = get_Y_iso_idx_and_labels(orbits2, train_graph_idx, test_graph_idx, dataset,
+                                                                     homogeneous=True)
+            iso_test_idx7, iso_test_labels7 = get_Y_iso_idx_and_labels(orbits2, train_graph_idx, test_graph_idx, dataset,
+                                                                       homogeneous=False)
 
         print('Possible train classes', get_dataset_classes(train_loader))
         print('Possible val classes', get_dataset_classes(val_loader))
@@ -216,6 +245,15 @@ def main(args):
 
         test_acc, test_acc_iso = test_model(best_model, test_loader, device, iso_test_idx)
         test_acc2, test_acc_iso2 = test_model(best_model, test_loader, device, iso_test_idx, iso_test_labels)
+        test_acc3, test_acc_iso3 = test_model(best_model, test_loader, device, iso_test_idx3, iso_test_labels3)
+        test_acc4, test_acc_iso4 = test_model(best_model, test_loader, device, iso_test_idx3)
+
+        if args.orbits_path2:
+            test_acc5, test_acc_iso5 = test_model(best_model, test_loader, device, iso_test_idx5)
+            test_acc6, test_acc_iso6 = test_model(best_model, test_loader, device, iso_test_idx5, iso_test_labels5)
+            test_acc7, test_acc_iso7 = test_model(best_model, test_loader, device, iso_test_idx7, iso_test_labels7)
+            test_acc8, test_acc_iso8 = test_model(best_model, test_loader, device, iso_test_idx7)
+
         print('Xval {:03d} Best model accuracy on test {:.4f} vs {:.4f} ({:.4f} {})'.format(xval, test_acc,
                                                                                             best_test_score, best_score,
                                                                                             best_epoch))
@@ -223,6 +261,20 @@ def main(args):
         global_test_acc_iso.append(test_acc_iso)
         global_test_acc2.append(test_acc2)
         global_test_acc_iso2.append(test_acc_iso2)
+        global_test_acc3.append(test_acc3)
+        global_test_acc_iso3.append(test_acc_iso3)
+        global_test_acc4.append(test_acc4)
+        global_test_acc_iso4.append(test_acc_iso4)
+
+        if args.orbits_path2:
+            global_test_acc5.append(test_acc5)
+            global_test_acc_iso5.append(test_acc_iso5)
+            global_test_acc6.append(test_acc6)
+            global_test_acc_iso6.append(test_acc_iso6)
+            global_test_acc7.append(test_acc7)
+            global_test_acc_iso7.append(test_acc_iso7)
+            global_test_acc8.append(test_acc8)
+            global_test_acc_iso8.append(test_acc_iso8)
 
         epoch_trains.append(epoch_train)
         epoch_vals.append(epoch_val)
@@ -236,6 +288,21 @@ def main(args):
     test_iso_mean, test_iso_std = np.mean(global_test_acc_iso), np.std(global_test_acc_iso)
     test_mean2, test_std2 = np.mean(global_test_acc2), np.std(global_test_acc2)
     test_iso_mean2, test_iso_std2 = np.mean(global_test_acc_iso2), np.std(global_test_acc_iso2)
+    test_mean3, test_std3 = np.mean(global_test_acc3), np.std(global_test_acc3)
+    test_iso_mean3, test_iso_std3 = np.mean(global_test_acc_iso3), np.std(global_test_acc_iso3)
+    test_mean4, test_std4 = np.mean(global_test_acc4), np.std(global_test_acc4)
+    test_iso_mean4, test_iso_std4 = np.mean(global_test_acc_iso4), np.std(global_test_acc_iso4)
+
+    if args.orbits_path2:
+        test_mean5, test_std5 = np.mean(global_test_acc5), np.std(global_test_acc5)
+        test_iso_mean5, test_iso_std5 = np.mean(global_test_acc_iso5), np.std(global_test_acc_iso5)
+        test_mean6, test_std6 = np.mean(global_test_acc6), np.std(global_test_acc6)
+        test_iso_mean6, test_iso_std6 = np.mean(global_test_acc_iso6), np.std(global_test_acc_iso6)
+        test_mean7, test_std7 = np.mean(global_test_acc7), np.std(global_test_acc7)
+        test_iso_mean7, test_iso_std7 = np.mean(global_test_acc_iso7), np.std(global_test_acc_iso7)
+        test_mean8, test_std8 = np.mean(global_test_acc8), np.std(global_test_acc8)
+        test_iso_mean8, test_iso_std8 = np.mean(global_test_acc_iso8), np.std(global_test_acc_iso8)
+
     print(
         'After 10-Fold XVal: Model-1 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean, test_std,
                                                                                                    test_iso_mean,
@@ -244,13 +311,62 @@ def main(args):
                                                                                                      test_std2,
                                                                                                      test_iso_mean2,
                                                                                                      test_iso_std2))
+    print(
+        'After 10-Fold XVal: Model-3 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean3, test_std3,
+                                                                                                   test_iso_mean3,
+                                                                                                   test_iso_std3))
+    print('After 10-Fold XVal: Model-4 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean4,
+                                                                                                     test_std4,
+                                                                                                     test_iso_mean4,
+                                                                                                     test_iso_std4))
+
+    if args.orbits_path2:
+        print('After 10-Fold XVal: Model-5 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean5,
+                                                                                                         test_std5,
+                                                                                                         test_iso_mean5,
+                                                                                                         test_iso_std5))
+        print('After 10-Fold XVal: Model-6 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean6,
+                                                                                                         test_std6,
+                                                                                                         test_iso_mean6,
+                                                                                                         test_iso_std6))
+        print('After 10-Fold XVal: Model-7 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean7,
+                                                                                                         test_std7,
+                                                                                                         test_iso_mean7,
+                                                                                                         test_iso_std7))
+        print('After 10-Fold XVal: Model-8 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean8,
+                                                                                                         test_std8,
+                                                                                                         test_iso_mean8,
+                                                                                                         test_iso_std8))
     with open('../gnn_results/results.txt', 'a+') as f:
-        print("model-1 gin {} {} {:.6f} {:.6f} {}".format(int(args.clean_dataset), args.dataset, test_mean, test_std,
-                                                  test_iso_mean, test_iso_std, global_test_acc, global_test_acc_iso),
+        print("model-1 gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(args.orbits_path, int(args.clean_dataset), args.dataset, test_mean, test_std,
+                                                  test_iso_mean, test_iso_std),
               file=f)
-        print("model-2 gin {} {} {:.6f} {:.6f} {}".format(int(args.clean_dataset), args.dataset, test_mean2, test_std2,
-                                                  test_iso_mean2, test_iso_std2, global_test_acc2, global_test_acc_iso2),
+        print("model-2 gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(args.orbits_path, int(args.clean_dataset), args.dataset, test_mean2, test_std2,
+                                                  test_iso_mean2, test_iso_std2),
               file=f)
+        print("model-3 gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(args.orbits_path, int(args.clean_dataset), args.dataset, test_mean3, test_std3,
+                                                          test_iso_mean3, test_iso_std3),
+              file=f)
+        print("model-4 gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(args.orbits_path, int(args.clean_dataset), args.dataset, test_mean4, test_std4,
+                                                          test_iso_mean4, test_iso_std4),
+              file=f)
+        if args.orbits_path2:
+            print("model-5 gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(args.orbits_path2, int(args.clean_dataset),
+                                                                            args.dataset, test_mean5, test_std5,
+                                                                            test_iso_mean5, test_iso_std5),
+                  file=f)
+            print("model-6 gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(args.orbits_path2, int(args.clean_dataset),
+                                                                            args.dataset, test_mean6, test_std6,
+                                                                            test_iso_mean6, test_iso_std6),
+                  file=f)
+            print("model-7 gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(args.orbits_path2, int(args.clean_dataset),
+                                                                            args.dataset, test_mean7, test_std7,
+                                                                            test_iso_mean7, test_iso_std7),
+                  file=f)
+            print("model-8 gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(args.orbits_path2, int(args.clean_dataset),
+                                                                            args.dataset, test_mean8, test_std8,
+                                                                            test_iso_mean8, test_iso_std8),
+                  file=f)
 
     return best_model
 
@@ -302,7 +418,8 @@ def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/o
 if __name__ == "__main__":
     args = get_args()
     # args.dataset = 'MUTAG'
-    # args.num_epochs = 100
+    # args.num_epochs = 3
+    # args.orbits_path = '../results_node_labels/orbits/'
     # args.clean_dataset = True
     # args.initialize_node_features = True
     main(args)

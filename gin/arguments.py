@@ -20,6 +20,11 @@ def get_args():
         help='Path to orbits')
 
     parser.add_argument(
+        '--orbits_path2', type=str,
+        default=None,
+        help='Path to orbits with node labels')
+
+    parser.add_argument(
         '--dir', type=str,
         default='./Datasets',
         help='Directory to save datasets to')
@@ -77,7 +82,7 @@ def get_args():
 
     args = parser.parse_args()
 
-    assert args.dataset in BIO+SOCIAL, \
-        "This dataset is not currently supported or doesn't exist."
+    # assert args.dataset in BIO+SOCIAL, \
+    #     "This dataset is not currently supported or doesn't exist."
 
     return args
