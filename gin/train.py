@@ -158,6 +158,7 @@ def main(args):
 
     kf = KFold(args.num_kfold, shuffle=True)  # 20% for test size
     pos2idx = dict(enumerate(shuffled_idx))
+    print(pos2idx)
 
     for xval, (train_index, test_index) in enumerate(kf.split(shuffled_idx)):
 

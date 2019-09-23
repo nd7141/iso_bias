@@ -7,3 +7,4 @@ gr
 __pycache__
 .DS_Store
 kernels/src/gkernel
+orbits/

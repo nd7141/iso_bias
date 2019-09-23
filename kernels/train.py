@@ -1,10 +1,12 @@
 import pathlib
 import subprocess
+import copy
 from utils import save_to_graphml, read_kernel_matrix, Evaluation
 from arguments import get_args
 from torch_geometric.datasets import TUDataset
 from collections import Counter
 from torch_geometric.transforms.one_hot_degree import OneHotDegree
+from utils import get_clean_graph_indices
 
 
 def main(args):
@@ -46,7 +48,7 @@ def main(args):
 
     ev = Evaluation(K, y, verbose=True)
 
-    accs = ev.evaluate()
+    accs = ev.evaluate(args, dataset)
 
 if __name__ == "__main__":
     args = get_args()

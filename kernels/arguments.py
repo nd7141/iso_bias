@@ -10,6 +10,20 @@ def get_args():
         help='Dataset to train on')
 
     parser.add_argument(
+        '--clean_dataset', default=False, action='store_true', dest='clean_dataset',
+        help='Clean dataset')
+
+    parser.add_argument(
+        '--orbits_path', type=str,
+        default='./orbits/no_labels/orbits/',
+        help='Path to orbits')
+
+    parser.add_argument(
+        '--orbits_path2', type=str,
+        default=None,
+        help='Path to orbits with node labels')
+
+    parser.add_argument(
         '--dir', type=str,
         default='./Datasets',
         help='Directory to save datasets to')
@@ -23,7 +37,6 @@ def get_args():
         '--parameter', type=str,
         default='5',
         help='Parameter(s) in a kernel')
-
 
     args = parser.parse_args()
 
