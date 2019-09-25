@@ -20,7 +20,7 @@ def get_args():
 
     parser.add_argument(
         '--orbits_path2', type=str,
-        default=None,
+        default=None, # './orbits/node_labels/orbits/'
         help='Path to orbits with node labels')
 
     parser.add_argument(

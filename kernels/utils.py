@@ -1,6 +1,5 @@
-# from igraph import Graph
+from igraph import Graph
 import numpy as np
-import os
 import ast
 import random
 from sklearn import svm
@@ -8,6 +7,7 @@ from sklearn.metrics import accuracy_score
 import pathlib
 import networkx as nx
 from collections import Counter
+
 
 def save_to_graphml(dataset, path):
     names = []
@@ -72,7 +72,7 @@ class Evaluation(object):
     you can run self.evaluate(k=10) to get accuracy results on k=10
     cross validation test sets of your matrix.
     '''
-    def __init__(self, matrix, labels, verbose=False):
+    def __init__(self, matrix, labels, args, verbose=False):
         '''
         Initialize evaluation.
         :param matrix: feature matrix (either kernel or embeddings)
@@ -81,6 +81,7 @@ class Evaluation(object):
         self.K = matrix
         self.y = labels
         self.verbose = verbose
+        self.args = args
 
         self.global_train_acc = []
         self.global_test_acc = []
@@ -91,6 +92,16 @@ class Evaluation(object):
         self.global_test_acc_iso3 = []
         self.global_test_acc4 = []
         self.global_test_acc_iso4 = []
+
+        if self.args.orbits_path2:
+            self.global_test_acc5 = []
+            self.global_test_acc_iso5 = []
+            self.global_test_acc6 = []
+            self.global_test_acc_iso6 = []
+            self.global_test_acc7 = []
+            self.global_test_acc_iso7 = []
+            self.global_test_acc8 = []
+            self.global_test_acc_iso8 = []
 
     def split(self, alpha=.8):
         y = np.copy(self.y)
@@ -173,7 +184,8 @@ class Evaluation(object):
 
     def run_SVM(self,
                 K_train, K_val, K_test, y_train, y_val, y_test, K_train_val, y_train_val,
-                iso_test_idx, iso_test_labels, iso_test_idx3, iso_test_labels3):
+                iso_test_idx, iso_test_labels, iso_test_idx3, iso_test_labels3,
+                iso_test_idx5 = None, iso_test_labels5 = None, iso_test_idx7 = None, iso_test_labels7 = None):
         '''Run SVM on kernel matrix using train-val-test split.'''
 
         C_grid = [0.001, 0.01, 0.1, 1, 10]
@@ -202,6 +214,12 @@ class Evaluation(object):
         test_acc3, test_acc_iso3 = test_model(y_test_pred, y_test, iso_test_idx3, iso_test_labels3)
         test_acc4, test_acc_iso4 = test_model(y_test_pred, y_test, iso_test_idx3)
 
+        if self.args.orbits_path2:
+            test_acc5, test_acc_iso5 = test_model(y_test_pred, y_test, iso_test_idx5)
+            test_acc6, test_acc_iso6 = test_model(y_test_pred, y_test, iso_test_idx5, iso_test_labels5)
+            test_acc7, test_acc_iso7 = test_model(y_test_pred, y_test, iso_test_idx7, iso_test_labels7)
+            test_acc8, test_acc_iso8 = test_model(y_test_pred, y_test, iso_test_idx7)
+
         self.global_test_acc.append(test_acc)
         self.global_test_acc_iso.append(test_acc_iso)
         self.global_test_acc2.append(test_acc2)
@@ -211,18 +229,30 @@ class Evaluation(object):
         self.global_test_acc4.append(test_acc4)
         self.global_test_acc_iso4.append(test_acc_iso4)
 
+        if self.args.orbits_path2:
+            self.global_test_acc5.append(test_acc5)
+            self.global_test_acc_iso5.append(test_acc_iso5)
+            self.global_test_acc6.append(test_acc6)
+            self.global_test_acc_iso6.append(test_acc_iso6)
+            self.global_test_acc7.append(test_acc7)
+            self.global_test_acc_iso7.append(test_acc_iso7)
+            self.global_test_acc8.append(test_acc8)
+            self.global_test_acc_iso8.append(test_acc_iso8)
+
         return val_scores[max_idx], accuracy_score(y_test, y_test_pred), C_grid[max_idx]
 
-    def evaluate(self, args, dataset, k=10):
+    def evaluate(self, dataset, k=10):
         '''
         Performs k-fold cross-validation of kernel matrix using SVM model.
         :param k: number of folds
         :return: list of k accuracies on a test split.
         '''
 
-        print("Use clean dataset: {}".format(bool(args.clean_dataset)))
-        graph_idx, orbits = get_clean_graph_indices(dataset, path_to_orbits=args.orbits_path)
-        print('Found {} orbits from {}'.format(len(orbits), args.orbits_path))
+        graph_idx, orbits = get_clean_graph_indices(dataset, path_to_orbits=self.args.orbits_path)
+        print('Found {} orbits from {}'.format(len(orbits), self.args.orbits_path))
+        if self.args.orbits_path2:
+            graph_idx2, orbits2 = get_clean_graph_indices(dataset, path_to_orbits=self.args.orbits_path2)
+            print('Found {} orbits from {}'.format(len(orbits2), self.args.orbits_path2))
 
         gen = self.kfold(k=k)
 
@@ -233,8 +263,20 @@ class Evaluation(object):
                                                                      homogeneous=True)
             iso_test_idx3, iso_test_labels3 = get_Y_iso_idx_and_labels(orbits, train_original_inds, test_original_inds, self.y,
                                                                        homogeneous=False)
+            if self.args.orbits_path2:
+                iso_test_idx5, iso_test_labels5 = get_Y_iso_idx_and_labels(orbits2, train_original_inds, test_original_inds,
+                                                                           self.y,
+                                                                           homogeneous=True)
+                iso_test_idx7, iso_test_labels7 = get_Y_iso_idx_and_labels(orbits2, train_original_inds, test_original_inds,
+                                                                           self.y,
+                                                                           homogeneous=False)
+            else:
+                iso_test_idx5, iso_test_labels5 = None, None
+                iso_test_idx7, iso_test_labels7 = None, None
+
             val, acc, c_max = self.run_SVM(K_train, K_val, K_test, y_train, y_val, y_test, K_train_val, y_train_val,
-                                           iso_test_idx, iso_test_labels, iso_test_idx3, iso_test_labels3)
+                                           iso_test_idx, iso_test_labels, iso_test_idx3, iso_test_labels3,
+                                           iso_test_idx5, iso_test_labels5, iso_test_idx7, iso_test_labels7)
             accs.append(acc)
             if self.verbose:
                 print("Scored {} on validation and {} on test with C = {}".format(val, acc, c_max))
@@ -247,6 +289,16 @@ class Evaluation(object):
         test_iso_mean3, test_iso_std3 = np.mean(self.global_test_acc_iso3), np.std(self.global_test_acc_iso3)
         test_mean4, test_std4 = np.mean(self.global_test_acc4), np.std(self.global_test_acc4)
         test_iso_mean4, test_iso_std4 = np.mean(self.global_test_acc_iso4), np.std(self.global_test_acc_iso4)
+
+        if self.args.orbits_path2:
+            test_mean5, test_std5 = np.mean(self.global_test_acc5), np.std(self.global_test_acc5)
+            test_iso_mean5, test_iso_std5 = np.mean(self.global_test_acc_iso5), np.std(self.global_test_acc_iso5)
+            test_mean6, test_std6 = np.mean(self.global_test_acc6), np.std(self.global_test_acc6)
+            test_iso_mean6, test_iso_std6 = np.mean(self.global_test_acc_iso6), np.std(self.global_test_acc_iso6)
+            test_mean7, test_std7 = np.mean(self.global_test_acc7), np.std(self.global_test_acc7)
+            test_iso_mean7, test_iso_std7 = np.mean(self.global_test_acc_iso7), np.std(self.global_test_acc_iso7)
+            test_mean8, test_std8 = np.mean(self.global_test_acc8), np.std(self.global_test_acc8)
+            test_iso_mean8, test_iso_std8 = np.mean(self.global_test_acc_iso8), np.std(self.global_test_acc_iso8)
 
         print(
             'After 10-Fold XVal: Model-1 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean,
@@ -266,6 +318,63 @@ class Evaluation(object):
                                                                                                          test_std4,
                                                                                                          test_iso_mean4,
                                                                                                          test_iso_std4))
+        if self.args.orbits_path2:
+            print('After 10-Fold XVal: Model-5 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean5,
+                                                                                                             test_std5,
+                                                                                                             test_iso_mean5,
+                                                                                                             test_iso_std5))
+            print('After 10-Fold XVal: Model-6 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean6,
+                                                                                                             test_std6,
+                                                                                                             test_iso_mean6,
+                                                                                                             test_iso_std6))
+            print('After 10-Fold XVal: Model-7 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean7,
+                                                                                                             test_std7,
+                                                                                                             test_iso_mean7,
+                                                                                                             test_iso_std7))
+            print('After 10-Fold XVal: Model-8 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean8,
+                                                                                                             test_std8,
+                                                                                                             test_iso_mean8,
+                                                                                                             test_iso_std8))
+        path = f'./kernel_results/{self.args.dataset}/{self.args.kernel}/'
+        pathlib.Path(f'{path}').mkdir(parents=True, exist_ok=True)
+        with open(f'{path}results.txt', 'a+') as f:
+            print("model-1 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path, int(self.args.clean_dataset),
+                                                                            self.args.dataset, test_mean, test_std,
+                                                                            test_iso_mean, test_iso_std),
+                  file=f)
+            print("model-2 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path, int(self.args.clean_dataset),
+                                                                            self.args.dataset, test_mean2, test_std2,
+                                                                            test_iso_mean2, test_iso_std2),
+                  file=f)
+            print("model-3 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path, int(self.args.clean_dataset),
+                                                                            self.args.dataset, test_mean3, test_std3,
+                                                                            test_iso_mean3, test_iso_std3),
+                  file=f)
+            print("model-4 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path, int(self.args.clean_dataset),
+                                                                            self.args.dataset, test_mean4, test_std4,
+                                                                            test_iso_mean4, test_iso_std4),
+                  file=f)
+            if self.args.orbits_path2:
+                print("model-5 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path2,
+                                                                                int(self.args.clean_dataset),
+                                                                                self.args.dataset, test_mean5, test_std5,
+                                                                                test_iso_mean5, test_iso_std5),
+                      file=f)
+                print("model-6 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path2,
+                                                                                int(self.args.clean_dataset),
+                                                                                self.args.dataset, test_mean6, test_std6,
+                                                                                test_iso_mean6, test_iso_std6),
+                      file=f)
+                print("model-7 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path2,
+                                                                                int(self.args.clean_dataset),
+                                                                                self.args.dataset, test_mean7, test_std7,
+                                                                                test_iso_mean7, test_iso_std7),
+                      file=f)
+                print("model-8 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path2,
+                                                                                int(self.args.clean_dataset),
+                                                                                self.args.dataset, test_mean8, test_std8,
+                                                                                test_iso_mean8, test_iso_std8),
+                      file=f)
         return accs
 
 
