@@ -335,7 +335,7 @@ class Evaluation(object):
                                                                                                              test_std8,
                                                                                                              test_iso_mean8,
                                                                                                              test_iso_std8))
-        path = f'./kernel_results/{self.args.dataset}/{self.args.kernel}/'
+        path = f'./kernel_results_2/{self.args.dataset}/{self.args.kernel}/'
         pathlib.Path(f'{path}').mkdir(parents=True, exist_ok=True)
         with open(f'{path}results.txt', 'a+') as f:
             print("model-1 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path, int(self.args.clean_dataset),
@@ -465,9 +465,10 @@ def get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, y, homogen
 
 
 def test_model(preds, y,  iso_test_idx, iso_labels=None):
+    new_preds = preds.copy()
     if iso_labels is not None:
-        preds[iso_test_idx] = iso_labels
-    correct = (preds == y).sum()
-    iso_correct = (preds[iso_test_idx] == y[iso_test_idx]).sum()
-    return correct / len(preds), iso_correct / len(iso_test_idx) if len(iso_test_idx) else 1
+        new_preds[iso_test_idx] = iso_labels
+    correct = (new_preds == y).sum()
+    iso_correct = (new_preds[iso_test_idx] == y[iso_test_idx]).sum()
+    return correct / len(new_preds), iso_correct / len(iso_test_idx) if len(iso_test_idx) else 1
 
