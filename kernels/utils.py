@@ -83,25 +83,14 @@ class Evaluation(object):
         self.verbose = verbose
         self.args = args
 
-        self.global_train_acc = []
-        self.global_test_acc = []
-        self.global_test_acc_iso = []
-        self.global_test_acc2 = []
-        self.global_test_acc_iso2 = []
-        self.global_test_acc3 = []
-        self.global_test_acc_iso3 = []
-        self.global_test_acc4 = []
-        self.global_test_acc_iso4 = []
-
-        if self.args.orbits_path2:
-            self.global_test_acc5 = []
-            self.global_test_acc_iso5 = []
-            self.global_test_acc6 = []
-            self.global_test_acc_iso6 = []
-            self.global_test_acc7 = []
-            self.global_test_acc_iso7 = []
-            self.global_test_acc8 = []
-            self.global_test_acc_iso8 = []
+        self.global_test_acc_original_hom = []  # accuracy of original model
+        self.global_test_acc_iso_original_hom = []  # accuracy of original model on homogeneous Y_iso
+        self.global_test_acc_hom = []  # accuracy of peering model on homogeneous
+        self.global_test_acc_iso_hom = []  # accuracy of peering model on homogeneous Y_iso
+        self.global_test_acc_original_all = []  # accuracy of original model (same as first)
+        self.global_test_acc_iso_original_all = []  # accuracy of original model on all Y_iso
+        self.global_test_acc_all = []  # accuracy of peering model on all
+        self.global_test_acc_iso_all = []  # accuracy of peering model on all Y_iso
 
     def split(self, alpha=.8):
         y = np.copy(self.y)
@@ -184,8 +173,8 @@ class Evaluation(object):
 
     def run_SVM(self,
                 K_train, K_val, K_test, y_train, y_val, y_test, K_train_val, y_train_val,
-                iso_test_idx, iso_test_labels, iso_test_idx3, iso_test_labels3,
-                iso_test_idx5 = None, iso_test_labels5 = None, iso_test_idx7 = None, iso_test_labels7 = None):
+                iso_test_idx_hom, iso_test_labels_hom,
+                iso_test_idx_all, iso_test_labels_all):
         '''Run SVM on kernel matrix using train-val-test split.'''
 
         C_grid = [0.001, 0.01, 0.1, 1, 10]
@@ -209,35 +198,21 @@ class Evaluation(object):
         if self.verbose:
             print(y_test_pred)
 
-        test_acc, test_acc_iso = test_model(y_test_pred, y_test, iso_test_idx)
-        test_acc2, test_acc_iso2 = test_model(y_test_pred, y_test, iso_test_idx, iso_test_labels)
-        test_acc3, test_acc_iso3 = test_model(y_test_pred, y_test, iso_test_idx3, iso_test_labels3)
-        test_acc4, test_acc_iso4 = test_model(y_test_pred, y_test, iso_test_idx3)
+        test_acc_original_hom, test_acc_iso_original_hom = test_model(y_test_pred, y_test, iso_test_idx_hom)
+        test_acc_hom, test_acc_iso_hom = test_model(y_test_pred, y_test, iso_test_idx_hom, iso_test_labels_hom)
 
-        if self.args.orbits_path2:
-            test_acc5, test_acc_iso5 = test_model(y_test_pred, y_test, iso_test_idx5)
-            test_acc6, test_acc_iso6 = test_model(y_test_pred, y_test, iso_test_idx5, iso_test_labels5)
-            test_acc7, test_acc_iso7 = test_model(y_test_pred, y_test, iso_test_idx7, iso_test_labels7)
-            test_acc8, test_acc_iso8 = test_model(y_test_pred, y_test, iso_test_idx7)
+        test_acc_original_all, test_acc_iso_original_all = test_model(y_test_pred, y_test, iso_test_idx_all)
+        test_acc_all, test_acc_iso_all = test_model(y_test_pred, y_test, iso_test_idx_all, iso_test_labels_all)
 
-        self.global_test_acc.append(test_acc)
-        self.global_test_acc_iso.append(test_acc_iso)
-        self.global_test_acc2.append(test_acc2)
-        self.global_test_acc_iso2.append(test_acc_iso2)
-        self.global_test_acc3.append(test_acc3)
-        self.global_test_acc_iso3.append(test_acc_iso3)
-        self.global_test_acc4.append(test_acc4)
-        self.global_test_acc_iso4.append(test_acc_iso4)
+        self.global_test_acc_original_hom.append(test_acc_original_hom)
+        self.global_test_acc_iso_original_hom.append(test_acc_iso_original_hom)
+        self.global_test_acc_hom.append(test_acc_hom)
+        self.global_test_acc_iso_hom.append(test_acc_iso_hom)
 
-        if self.args.orbits_path2:
-            self.global_test_acc5.append(test_acc5)
-            self.global_test_acc_iso5.append(test_acc_iso5)
-            self.global_test_acc6.append(test_acc6)
-            self.global_test_acc_iso6.append(test_acc_iso6)
-            self.global_test_acc7.append(test_acc7)
-            self.global_test_acc_iso7.append(test_acc_iso7)
-            self.global_test_acc8.append(test_acc8)
-            self.global_test_acc_iso8.append(test_acc_iso8)
+        self.global_test_acc_original_all.append(test_acc_original_all)
+        self.global_test_acc_iso_original_all.append(test_acc_iso_original_all)
+        self.global_test_acc_all.append(test_acc_all)
+        self.global_test_acc_iso_all.append(test_acc_iso_all)
 
         return val_scores[max_idx], accuracy_score(y_test, y_test_pred), C_grid[max_idx]
 
@@ -250,131 +225,90 @@ class Evaluation(object):
 
         graph_idx, orbits = get_clean_graph_indices(dataset, path_to_orbits=self.args.orbits_path)
         print('Found {} orbits from {}'.format(len(orbits), self.args.orbits_path))
-        if self.args.orbits_path2:
-            graph_idx2, orbits2 = get_clean_graph_indices(dataset, path_to_orbits=self.args.orbits_path2)
-            print('Found {} orbits from {}'.format(len(orbits2), self.args.orbits_path2))
-
         gen = self.kfold(k=k)
 
         accs = []
         for ix, (K_train, K_val, K_test, y_train, y_val, y_test, K_train_val, y_train_val, train_original_inds, test_original_inds) in enumerate(gen):
 
-            iso_test_idx, iso_test_labels = get_Y_iso_idx_and_labels(orbits, train_original_inds, test_original_inds, self.y,
-                                                                     homogeneous=True)
-            iso_test_idx3, iso_test_labels3 = get_Y_iso_idx_and_labels(orbits, train_original_inds, test_original_inds, self.y,
-                                                                       homogeneous=False)
-            if self.args.orbits_path2:
-                iso_test_idx5, iso_test_labels5 = get_Y_iso_idx_and_labels(orbits2, train_original_inds, test_original_inds,
-                                                                           self.y,
-                                                                           homogeneous=True)
-                iso_test_idx7, iso_test_labels7 = get_Y_iso_idx_and_labels(orbits2, train_original_inds, test_original_inds,
-                                                                           self.y,
-                                                                           homogeneous=False)
-            else:
-                iso_test_idx5, iso_test_labels5 = None, None
-                iso_test_idx7, iso_test_labels7 = None, None
+            iso_test_idx_all, iso_test_labels_all = get_Y_iso_idx_and_labels(orbits, train_original_inds, test_original_inds, self.y, homogeneous=True)
+            iso_test_idx_hom, iso_test_labels_hom = get_Y_iso_idx_and_labels(orbits, train_original_inds, test_original_inds, self.y, homogeneous=False)
 
             val, acc, c_max = self.run_SVM(K_train, K_val, K_test, y_train, y_val, y_test, K_train_val, y_train_val,
-                                           iso_test_idx, iso_test_labels, iso_test_idx3, iso_test_labels3,
-                                           iso_test_idx5, iso_test_labels5, iso_test_idx7, iso_test_labels7)
+                                           iso_test_idx_hom, iso_test_labels_hom,
+                                           iso_test_idx_all, iso_test_labels_all)
             accs.append(acc)
             if self.verbose:
                 print("Scored {} on validation and {} on test with C = {}".format(val, acc, c_max))
 
-        test_mean, test_std = np.mean(self.global_test_acc), np.std(self.global_test_acc)
-        test_iso_mean, test_iso_std = np.mean(self.global_test_acc_iso), np.std(self.global_test_acc_iso)
-        test_mean2, test_std2 = np.mean(self.global_test_acc2), np.std(self.global_test_acc2)
-        test_iso_mean2, test_iso_std2 = np.mean(self.global_test_acc_iso2), np.std(self.global_test_acc_iso2)
-        test_mean3, test_std3 = np.mean(self.global_test_acc3), np.std(self.global_test_acc3)
-        test_iso_mean3, test_iso_std3 = np.mean(self.global_test_acc_iso3), np.std(self.global_test_acc_iso3)
-        test_mean4, test_std4 = np.mean(self.global_test_acc4), np.std(self.global_test_acc4)
-        test_iso_mean4, test_iso_std4 = np.mean(self.global_test_acc_iso4), np.std(self.global_test_acc_iso4)
+        test_mean_original_hom, test_std_original_hom = np.mean(self.global_test_acc_original_hom), np.std(
+            self.global_test_acc_original_hom)
+        test_iso_mean_original_hom, test_iso_std_original_hom = np.mean(self.global_test_acc_iso_original_hom), np.std(
+            self.global_test_acc_iso_original_hom)
+        test_mean_hom, test_std_hom = np.mean(self.global_test_acc_hom), np.std(self.global_test_acc_hom)
+        test_iso_mean_hom, test_iso_std_hom = np.mean(self.global_test_acc_iso_hom), np.std(self.global_test_acc_iso_hom)
 
-        if self.args.orbits_path2:
-            test_mean5, test_std5 = np.mean(self.global_test_acc5), np.std(self.global_test_acc5)
-            test_iso_mean5, test_iso_std5 = np.mean(self.global_test_acc_iso5), np.std(self.global_test_acc_iso5)
-            test_mean6, test_std6 = np.mean(self.global_test_acc6), np.std(self.global_test_acc6)
-            test_iso_mean6, test_iso_std6 = np.mean(self.global_test_acc_iso6), np.std(self.global_test_acc_iso6)
-            test_mean7, test_std7 = np.mean(self.global_test_acc7), np.std(self.global_test_acc7)
-            test_iso_mean7, test_iso_std7 = np.mean(self.global_test_acc_iso7), np.std(self.global_test_acc_iso7)
-            test_mean8, test_std8 = np.mean(self.global_test_acc8), np.std(self.global_test_acc8)
-            test_iso_mean8, test_iso_std8 = np.mean(self.global_test_acc_iso8), np.std(self.global_test_acc_iso8)
+        test_mean_original_all, test_std_original_all = np.mean(self.global_test_acc_original_all), np.std(
+            self.global_test_acc_original_all)
+        test_iso_mean_original_all, test_iso_std_original_all = np.mean(self.global_test_acc_iso_original_all), np.std(
+            self.global_test_acc_iso_original_all)
+        test_mean_all, test_std_all = np.mean(self.global_test_acc_all), np.std(self.global_test_acc_all)
+        test_iso_mean_all, test_iso_std_all = np.mean(self.global_test_acc_iso_all), np.std(self.global_test_acc_iso_all)
 
         print(
-            'After 10-Fold XVal: Model-1 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean,
-                                                                                                       test_std,
-                                                                                                       test_iso_mean,
-                                                                                                       test_iso_std))
-        print('After 10-Fold XVal: Model-2 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean2,
-                                                                                                         test_std2,
-                                                                                                         test_iso_mean2,
-                                                                                                         test_iso_std2))
+            'After 10-Fold XVal: Original-Hom Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(
+                test_mean_original_hom, test_std_original_hom,
+                test_iso_mean_original_hom,
+                test_iso_std_original_hom))
+        print('After 10-Fold XVal: Peering-Hom Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(
+            test_mean_hom,
+            test_std_hom,
+            test_iso_mean_hom,
+            test_iso_std_hom))
         print(
-            'After 10-Fold XVal: Model-3 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean3,
-                                                                                                       test_std3,
-                                                                                                       test_iso_mean3,
-                                                                                                       test_iso_std3))
-        print('After 10-Fold XVal: Model-4 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean4,
-                                                                                                         test_std4,
-                                                                                                         test_iso_mean4,
-                                                                                                         test_iso_std4))
-        if self.args.orbits_path2:
-            print('After 10-Fold XVal: Model-5 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean5,
-                                                                                                             test_std5,
-                                                                                                             test_iso_mean5,
-                                                                                                             test_iso_std5))
-            print('After 10-Fold XVal: Model-6 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean6,
-                                                                                                             test_std6,
-                                                                                                             test_iso_mean6,
-                                                                                                             test_iso_std6))
-            print('After 10-Fold XVal: Model-7 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean7,
-                                                                                                             test_std7,
-                                                                                                             test_iso_mean7,
-                                                                                                             test_iso_std7))
-            print('After 10-Fold XVal: Model-8 Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(test_mean8,
-                                                                                                             test_std8,
-                                                                                                             test_iso_mean8,
-                                                                                                             test_iso_std8))
-        path = f'./kernel_results_2/{self.args.dataset}/{self.args.kernel}/'
+            'After 10-Fold XVal: Original-All Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(
+                test_mean_original_all, test_std_original_all,
+                test_iso_mean_original_all,
+                test_iso_std_original_all))
+        print('After 10-Fold XVal: Peering-All Test Acc: {:.4f}+-{:.4f} Test Iso Acc: {:.4f}+-{:.4f}'.format(
+            test_mean_all,
+            test_std_all,
+            test_iso_mean_all,
+            test_iso_std_all))
+
+        path = f'./kernel_results/{self.args.dataset}/{self.args.kernel}/'
         pathlib.Path(f'{path}').mkdir(parents=True, exist_ok=True)
         with open(f'{path}results.txt', 'a+') as f:
-            print("model-1 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path, int(self.args.clean_dataset),
-                                                                            self.args.dataset, test_mean, test_std,
-                                                                            test_iso_mean, test_iso_std),
+            print("original-hom gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path,
+                                                                                 int(self.args.clean_dataset), self.args.dataset,
+                                                                                 test_mean_original_hom,
+                                                                                 test_std_original_hom,
+                                                                                 test_iso_mean_original_hom,
+                                                                                 test_iso_std_original_hom),
                   file=f)
-            print("model-2 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path, int(self.args.clean_dataset),
-                                                                            self.args.dataset, test_mean2, test_std2,
-                                                                            test_iso_mean2, test_iso_std2),
+            print(
+                "peering-hom gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path, int(self.args.clean_dataset),
+                                                                              self.args.dataset,
+                                                                              test_mean_hom,
+                                                                              test_std_hom,
+                                                                              test_iso_mean_hom,
+                                                                              test_iso_std_hom),
+                file=f)
+
+            print("original-all gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path,
+                                                                                 int(self.args.clean_dataset), self.args.dataset,
+                                                                                 test_mean_original_all,
+                                                                                 test_std_original_all,
+                                                                                 test_iso_mean_original_all,
+                                                                                 test_iso_std_original_all),
                   file=f)
-            print("model-3 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path, int(self.args.clean_dataset),
-                                                                            self.args.dataset, test_mean3, test_std3,
-                                                                            test_iso_mean3, test_iso_std3),
-                  file=f)
-            print("model-4 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path, int(self.args.clean_dataset),
-                                                                            self.args.dataset, test_mean4, test_std4,
-                                                                            test_iso_mean4, test_iso_std4),
-                  file=f)
-            if self.args.orbits_path2:
-                print("model-5 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path2,
-                                                                                int(self.args.clean_dataset),
-                                                                                self.args.dataset, test_mean5, test_std5,
-                                                                                test_iso_mean5, test_iso_std5),
-                      file=f)
-                print("model-6 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path2,
-                                                                                int(self.args.clean_dataset),
-                                                                                self.args.dataset, test_mean6, test_std6,
-                                                                                test_iso_mean6, test_iso_std6),
-                      file=f)
-                print("model-7 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path2,
-                                                                                int(self.args.clean_dataset),
-                                                                                self.args.dataset, test_mean7, test_std7,
-                                                                                test_iso_mean7, test_iso_std7),
-                      file=f)
-                print("model-8 kernel {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path2,
-                                                                                int(self.args.clean_dataset),
-                                                                                self.args.dataset, test_mean8, test_std8,
-                                                                                test_iso_mean8, test_iso_std8),
-                      file=f)
+            print(
+                "peering-all gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path, int(self.args.clean_dataset),
+                                                                              self.args.dataset,
+                                                                              test_mean_all,
+                                                                              test_std_all,
+                                                                              test_iso_mean_all,
+                                                                              test_iso_std_all),
+                file=f)
         return accs
 
 
@@ -465,10 +399,9 @@ def get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, y, homogen
 
 
 def test_model(preds, y,  iso_test_idx, iso_labels=None):
-    new_preds = preds.copy()
     if iso_labels is not None:
-        new_preds[iso_test_idx] = iso_labels
-    correct = (new_preds == y).sum()
-    iso_correct = (new_preds[iso_test_idx] == y[iso_test_idx]).sum()
-    return correct / len(new_preds), iso_correct / len(iso_test_idx) if len(iso_test_idx) else 1
+        preds[iso_test_idx] = iso_labels
+    correct = (preds == y).sum()
+    iso_correct = (preds[iso_test_idx] == y[iso_test_idx]).sum()
+    return correct / len(preds), iso_correct / len(iso_test_idx) if len(iso_test_idx) else 1
 
