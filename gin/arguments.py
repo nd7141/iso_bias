@@ -20,11 +20,6 @@ def get_args():
         help='Path to orbits')
 
     parser.add_argument(
-        '--orbits_path2', type=str,
-        default=None,
-        help='Path to orbits with node labels')
-
-    parser.add_argument(
         '--dir', type=str,
         default='./Datasets',
         help='Directory to save datasets to')
