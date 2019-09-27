@@ -150,7 +150,6 @@ def main(args):
     pos2idx = dict(enumerate(shuffled_idx))
 
     for xval, (train_index, test_index) in enumerate(kf.split(shuffled_idx)):
-
         test_dataset = [dataset[pos2idx[idx]] for idx in test_index]
         train_val_dataset = [dataset[pos2idx[idx]] for idx in train_index]
 
@@ -166,8 +165,8 @@ def main(args):
 
         print(len(train_dataset), len(val_dataset), len(test_dataset))
 
-        iso_test_idx_hom, iso_test_labels_hom = get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, dataset, homogeneous=True)
         iso_test_idx_all, iso_test_labels_all = get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, dataset, homogeneous=False)
+        iso_test_idx_hom, iso_test_labels_hom = get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, dataset, homogeneous=True)
 
         print('Possible train classes', get_dataset_classes(train_loader))
         print('Possible val classes', get_dataset_classes(val_loader))
@@ -218,7 +217,7 @@ def main(args):
             epoch_val.append(val_acc)
             epoch_test.append(test_acc)
 
-            if val_acc > best_score and epoch >= 50:
+            if val_acc > best_score and epoch >= 1:
                 best_score = val_acc
                 best_test_score = test_acc
                 best_epoch = epoch
@@ -358,11 +357,11 @@ def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/o
 
 if __name__ == "__main__":
     args = get_args()
-    args.dataset = 'MUTAG'
+    # args.dataset = 'MUTAG'
     # args.num_epochs = 3
     # args.orbits_path = '../results_node_labels/orbits/'
     # args.clean_dataset = True
-    args.initialize_node_features = True
+    # args.initialize_node_features = True
     main(args)
 
     console = []
