@@ -230,8 +230,8 @@ class Evaluation(object):
         accs = []
         for ix, (K_train, K_val, K_test, y_train, y_val, y_test, K_train_val, y_train_val, train_original_inds, test_original_inds) in enumerate(gen):
 
-            iso_test_idx_all, iso_test_labels_all = get_Y_iso_idx_and_labels(orbits, train_original_inds, test_original_inds, self.y, homogeneous=True)
-            iso_test_idx_hom, iso_test_labels_hom = get_Y_iso_idx_and_labels(orbits, train_original_inds, test_original_inds, self.y, homogeneous=False)
+            iso_test_idx_all, iso_test_labels_all = get_Y_iso_idx_and_labels(orbits, train_original_inds, test_original_inds, self.y, homogeneous=False)
+            iso_test_idx_hom, iso_test_labels_hom = get_Y_iso_idx_and_labels(orbits, train_original_inds, test_original_inds, self.y, homogeneous=True)
 
             val, acc, c_max = self.run_SVM(K_train, K_val, K_test, y_train, y_val, y_test, K_train_val, y_train_val,
                                            iso_test_idx_hom, iso_test_labels_hom,
