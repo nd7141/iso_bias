@@ -20,6 +20,11 @@ def get_args():
         help='Path to orbits')
 
     parser.add_argument(
+        '--warmup', type=int,
+        default=50,
+        help='Epochs before evaluating best_model')
+
+    parser.add_argument(
         '--dir', type=str,
         default='./Datasets',
         help='Directory to save datasets to')

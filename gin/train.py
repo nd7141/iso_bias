@@ -217,7 +217,7 @@ def main(args):
             epoch_val.append(val_acc)
             epoch_test.append(test_acc)
 
-            if val_acc > best_score and epoch >= 1:
+            if val_acc > best_score and epoch >= args.warmup:
                 best_score = val_acc
                 best_test_score = test_acc
                 best_epoch = epoch
