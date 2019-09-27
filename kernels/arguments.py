@@ -15,7 +15,7 @@ def get_args():
 
     parser.add_argument(
         '--orbits_path', type=str,
-        default='./orbits/no_labels/orbits/',
+        default='../orbits/no_labels/',
         help='Path to orbits')
 
     parser.add_argument(
