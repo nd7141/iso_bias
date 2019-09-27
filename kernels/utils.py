@@ -399,9 +399,10 @@ def get_Y_iso_idx_and_labels(orbits, train_graph_idx, test_graph_idx, y, homogen
 
 
 def test_model(preds, y,  iso_test_idx, iso_labels=None):
+    new_preds = preds.copy()
     if iso_labels is not None:
-        preds[iso_test_idx] = iso_labels
-    correct = (preds == y).sum()
-    iso_correct = (preds[iso_test_idx] == y[iso_test_idx]).sum()
-    return correct / len(preds), iso_correct / len(iso_test_idx) if len(iso_test_idx) else 1
+        new_preds[iso_test_idx] = iso_labels
+    correct = (new_preds == y).sum()
+    iso_correct = (new_preds[iso_test_idx] == y[iso_test_idx]).sum()
+    return correct / len(new_preds), iso_correct / len(iso_test_idx) if len(iso_test_idx) else 1
 

@@ -8,3 +8,4 @@ __pycache__
 .DS_Store
 kernels/src/gkernel
 orbits/
+kernel_results*/
