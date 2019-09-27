@@ -7,7 +7,7 @@ from torch_geometric.datasets import TUDataset
 from collections import Counter
 from torch_geometric.transforms.one_hot_degree import OneHotDegree
 
-np.random.seed(42)
+np.random.seed(123)
 
 
 def main(args):

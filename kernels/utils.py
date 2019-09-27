@@ -8,6 +8,7 @@ import pathlib
 import networkx as nx
 from collections import Counter
 
+np.random.seed(123)
 
 def save_to_graphml(dataset, path):
     names = []
@@ -152,7 +153,7 @@ class Evaluation(object):
             K_test = K[np.ix_(test_range, train_val_range)]
             y_test = y[test_range]
 
-            val_range = random.sample(train_val_range, N // k)
+            val_range = np.random.choice(train_val_range, N // k)
             train_range = [ix for ix in train_val_range if ix not in val_range]
             train_original_inds = [mapping[ind] for ind in train_range]
             K_train = K[np.ix_(train_range, train_range)]
@@ -275,7 +276,7 @@ class Evaluation(object):
             test_iso_mean_all,
             test_iso_std_all))
 
-        path = f'./kernel_results/{self.args.dataset}/{self.args.kernel}/'
+        path = f'./kernel_results_seed123/{self.args.dataset}/{self.args.kernel}/'
         pathlib.Path(f'{path}').mkdir(parents=True, exist_ok=True)
         with open(f'{path}results.txt', 'a+') as f:
             print("original-hom gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(self.args.orbits_path,
