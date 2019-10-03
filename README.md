@@ -1,7 +1,7 @@
 ### Install nauty 
 We use version of nauty 26r11 (as of 12 Aug 2019). Full documentation is available here: http://pallini.di.uniroma1.it/. 
 
-Archive with nauty is included in the repo, so just clone this repo and do: 
+Archive with nauty is included in~~~~ the repo, so just clone this repo and do: 
 ```
 cd nauty
 tar xvzf nauty26r11.tar.gz

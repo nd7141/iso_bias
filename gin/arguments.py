@@ -1,4 +1,3 @@
-from constants import BIO, SOCIAL
 import argparse
 
 
@@ -11,12 +10,17 @@ def get_args():
         help='Dataset to train on')
 
     parser.add_argument(
+        '--output_fn', type=str,
+        default='results.txt',
+        help='Path to results.')
+
+    parser.add_argument(
         '--clean_dataset', default=False, action='store_true', dest='clean_dataset',
         help='Clean dataset')
 
     parser.add_argument(
         '--orbits_path', type=str,
-        default='../orbits/no_labels/',
+        default='../results_no_labels/orbits/',
         help='Path to orbits')
 
     parser.add_argument(

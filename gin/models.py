@@ -330,7 +330,7 @@ class MLP(nn.Module):
             self.linear_or_not = False
             self.linears = torch.nn.ModuleList()
             self.batch_norms = torch.nn.ModuleList()
-        
+
             self.linears.append(nn.Linear(input_dim, hidden_dim))
             for layer in range(num_layers - 2):
                 self.linears.append(nn.Linear(hidden_dim, hidden_dim))

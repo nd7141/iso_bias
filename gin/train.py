@@ -99,8 +99,7 @@ def main(args):
 
     print(dataset)
 
-    # if dataset.num_features == 0 or args.initialize_node_features:
-    if args.initialize_node_features:
+    if dataset.num_features == 0 or args.initialize_node_features:
         if args.randomize:
             print('Using random node features')
             dataset.transform = Random()
@@ -250,11 +249,6 @@ def main(args):
         epoch_trains.append(epoch_train)
         epoch_vals.append(epoch_val)
 
-    with open('../gnn_results/epochs_{}.txt'.format(args.dataset), 'w') as f:
-        print(epoch_trains, file=f)
-        print(epoch_vals, file=f)
-        print(epoch_tests, file=f)
-
     test_mean_original_hom, test_std_original_hom = np.mean(global_test_acc_original_hom), np.std(global_test_acc_original_hom)
     test_iso_mean_original_hom, test_iso_std_original_hom = np.mean(global_test_acc_iso_original_hom), np.std(global_test_acc_iso_original_hom)
     test_mean_hom, test_std_hom = np.mean(global_test_acc_hom), np.std(global_test_acc_hom)
@@ -281,7 +275,7 @@ def main(args):
                                                                                                      test_std_all,
                                                                                                      test_iso_mean_all,
                                                                                                      test_iso_std_all))
-    with open('../gnn_results/results.txt', 'a+') as f:
+    with open(args.output_fn, 'a+') as f:
         print("original-hom gin {} {} {} {:.3f} {:.3f} {:.3f} {:.3f}".format(args.orbits_path, int(args.clean_dataset), args.dataset,
                                                                              test_mean_original_hom,
                                                                              test_std_original_hom,
@@ -311,7 +305,7 @@ def main(args):
     return best_model
 
 
-def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/orbits/',
+def get_clean_graph_indices(dataset_name, path_to_orbits,
                             path_to_dataset='../datasets/'):
     '''
     Return indices of the dataset that should be included for training.
@@ -328,10 +322,13 @@ def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/o
         true_orbits = [list(map(int, ast.literal_eval(''.join(line.split()[2:])))) for line in f]
 
     # get target labels for each graphs
+    # TODO; check that pytorch has the same order for labels and replace the following with it
     graph_labels = dict()
     with open(path_to_dataset + f'{dataset_name}/{dataset_name}_graph_labels.txt') as f:
         for i, line in enumerate(f):
             graph_labels[i + 1] = line.strip()
+
+
 
     # get labels in each orbit
     orbit_labels = [[graph_labels[graph] for graph in orbit] for orbit in true_orbits]
@@ -357,9 +354,10 @@ def get_clean_graph_indices(dataset_name, path_to_orbits='../results_no_labels/o
 
 if __name__ == "__main__":
     args = get_args()
-    # args.dataset = 'MUTAG'
-    # args.num_epochs = 3
-    # args.orbits_path = '../results_node_labels/orbits/'
+    args.dataset = 'IMDB-MULTI'
+    args.num_epochs = 3
+    args.orbits_path = '../orbits/no_labels/'
+    args.warmup = 1
     # args.clean_dataset = True
     # args.initialize_node_features = True
     main(args)
