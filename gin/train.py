@@ -305,8 +305,7 @@ def main(args):
     return best_model
 
 
-def get_clean_graph_indices(dataset_name, path_to_orbits,
-                            path_to_dataset='../datasets/'):
+def get_clean_graph_indices(dataset_name, path_to_orbits):
     '''
     Return indices of the dataset that should be included for training.
     It gets graph orbits and keep one graph from each orbit if orbit contains the same labels,
@@ -322,13 +321,9 @@ def get_clean_graph_indices(dataset_name, path_to_orbits,
         true_orbits = [list(map(int, ast.literal_eval(''.join(line.split()[2:])))) for line in f]
 
     # get target labels for each graphs
-    # TODO; check that pytorch has the same order for labels and replace the following with it
     graph_labels = dict()
-    with open(path_to_dataset + f'{dataset_name}/{dataset_name}_graph_labels.txt') as f:
-        for i, line in enumerate(f):
-            graph_labels[i + 1] = line.strip()
-
-
+    for i, graph in enumerate(dataset):
+        graph_labels[i+1] = graph.y.item()
 
     # get labels in each orbit
     orbit_labels = [[graph_labels[graph] for graph in orbit] for orbit in true_orbits]
@@ -354,8 +349,8 @@ def get_clean_graph_indices(dataset_name, path_to_orbits,
 
 if __name__ == "__main__":
     args = get_args()
-    args.dataset = 'IMDB-MULTI'
-    args.num_epochs = 3
+    args.dataset = 'MUTAG'
+    args.num_epochs = 100
     args.orbits_path = '../orbits/no_labels/'
     args.warmup = 1
     # args.clean_dataset = True
