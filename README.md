@@ -4,14 +4,14 @@ This code has two main components, (1) finding all isomorphism pairs in graph da
 ### Citation
 If you found our work useful, please consider citing our work. 
 
-@misc{ivanov2019understanding,
-    title={Understanding Isomorphism Bias in Graph Data Sets},
-    author={Sergei Ivanov and Sergei Sviridov and Evgeny Burnaev},
-    year={2019},
-    eprint={1910.12091},
-    archivePrefix={arXiv},
-    primaryClass={cs.LG}
-}
+    @misc{ivanov2019understanding,
+        title={Understanding Isomorphism Bias in Graph Data Sets},
+        author={Sergei Ivanov and Sergei Sviridov and Evgeny Burnaev},
+        year={2019},
+        eprint={1910.12091},
+        archivePrefix={arXiv},
+        primaryClass={cs.LG}
+    }
 
 ### Install nauty 
 We use version of nauty 26r11 (as of 12 Aug 2019). Full documentation is available here: http://pallini.di.uniroma1.it/. 
