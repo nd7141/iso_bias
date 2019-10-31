@@ -27,7 +27,7 @@ cd nauty26r11
 make
 ```
 
-### Prepare datasets for nauty
+### Prepare data sets for nauty
 Most (if not all) of the datasets can be obtained from here: https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets
 If you have your own data set, you should format it properly. Consult https://github.com/nd7141/graph_datasets on the format of graph data sets. 
 Example. Download a zipped archive of the dataset of interest, for example `MUTAG.zip`. To keep folder clean, create a folder `datasets/` and unzip a dataset to it.
@@ -39,8 +39,8 @@ python preprocessing.py
 ```
 At the end you should get `datasets/data_adj/MUTAG_adj/` with the graphs.
  
-### Datasets for running models
-Datasets for models are taken from PyTorch-Geometric: https://github.com/rusty1s/pytorch_geometric
+### Data sets for running models
+Clean data sets are provided in (https://github.com/nd7141/graph_datasets). Additionally, data sets are available in https://pytorch-geometric.readthedocs.io/en/latest/modules/datasets.html#torch_geometric.datasets.TUDataset
 A dataset should be downloaded the first time and then stored locally in your computer so that next run
 it does not download it. 
 `kernel` folder additionally converts these datasets to graphml format. 
