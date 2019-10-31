@@ -1,3 +1,18 @@
+### Intro
+This code has two main components, (1) finding all isomorphism pairs in graph data set and (2) running classification models. Given proper format of graphs, one can find all graph orbits in a data set efficiently (i.e. groups of graphs that are pairwise isomorphic). There are two types of classification models, Neural Networks (GIN) and Graph Kernels (WL, Histograms, RW). 
+
+### Citation
+If you found our work useful, please consider citing our work. 
+
+@misc{ivanov2019understanding,
+    title={Understanding Isomorphism Bias in Graph Data Sets},
+    author={Sergei Ivanov and Sergei Sviridov and Evgeny Burnaev},
+    year={2019},
+    eprint={1910.12091},
+    archivePrefix={arXiv},
+    primaryClass={cs.LG}
+}
+
 ### Install nauty 
 We use version of nauty 26r11 (as of 12 Aug 2019). Full documentation is available here: http://pallini.di.uniroma1.it/. 
 
@@ -10,9 +25,10 @@ cd nauty26r11
 make
 ```
 
-### Download datasets for nauty
+### Prepare datasets for nauty
 Most (if not all) of the datasets can be obtained from here: https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets
-Download a zipped archive of the dataset of interest, for example `MUTAG.zip`. To keep folder clean, create a folder `datasets/` and unzip a dataset to it.
+If you have your own data set, you should format it properly. Consult https://github.com/nd7141/graph_datasets on the format of graph data sets. 
+Example. Download a zipped archive of the dataset of interest, for example `MUTAG.zip`. To keep folder clean, create a folder `datasets/` and unzip a dataset to it.
 
 File `preprocessing.py` contains a function to transform this folder to necessary nauty format and also has a function to convert it to `networkx` graphs. 
 Provide a name of the dataset in the script and run the file.  
