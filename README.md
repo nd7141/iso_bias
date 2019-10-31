@@ -1,3 +1,5 @@
+### **Understanding Isomorphism Bias in Graph Data Sets** (https://arxiv.org/abs/1910.12091)
+
 ### Intro
 This code has two main components, (1) finding all isomorphism pairs in graph data set and (2) running classification models. Given proper format of graphs, one can find all graph orbits in a data set efficiently (i.e. groups of graphs that are pairwise isomorphic). There are two types of classification models, Neural Networks (GIN) and Graph Kernels (WL, Histograms, RW). 
 
@@ -16,7 +18,7 @@ If you found our work useful, please consider citing our work.
 ### Install nauty 
 We use version of nauty 26r11 (as of 12 Aug 2019). Full documentation is available here: http://pallini.di.uniroma1.it/. 
 
-Archive with nauty is included in~~~~ the repo, so just clone this repo and do: 
+Archive with nauty is included in the repo, so just clone this repo and do: 
 ```
 cd nauty
 tar xvzf nauty26r11.tar.gz
