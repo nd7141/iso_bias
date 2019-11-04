@@ -28,6 +28,7 @@ make
 Graph data sets may contain isomorphic copies of graphs, in which case you may want to clean to run fair comparison of classification models. 
 **Note:** for data sets from https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets the cleaning procedure was already done and data sets can be found cleaned in diffierent formats (see section below). 
 If you have your own data set, you should format it properly. Consult https://github.com/nd7141/graph_datasets on the format of graph data sets. 
+
 Example of cleaning. Download a zipped archive of the dataset of interest, for example `MUTAG.zip`. To keep folder clean, create a folder `datasets/` and unzip a dataset to it.
 
 File `preprocessing.py` contains a function to transform this folder to necessary nauty format and also has a function to convert it to `networkx` graphs. 
