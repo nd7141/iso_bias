@@ -1,4 +1,4 @@
-### **Understanding Isomorphism Bias in Graph Data Sets** (https://arxiv.org/abs/1910.12091)
+### **Understanding Isomorphism Bias in Graph Data Sets**
 
 ### Intro
 This code has two main components:
@@ -6,18 +6,6 @@ This code has two main components:
   2. Running classification models. 
   
 Given proper format of graphs, one can find all graph orbits in a data set efficiently (i.e. groups of graphs that are pairwise isomorphic). There are two types of classification models, Neural Networks (GIN) and Graph Kernels (WL, Histograms, RW). 
-
-### Citation
-If you found our work useful, please consider citing our work. 
-
-    @misc{ivanov2019understanding,
-        title={Understanding Isomorphism Bias in Graph Data Sets},
-        author={Sergei Ivanov and Sergei Sviridov and Evgeny Burnaev},
-        year={2019},
-        eprint={1910.12091},
-        archivePrefix={arXiv},
-        primaryClass={cs.LG}
-    }
 
 ### Find isomorphic graphs with nauty
 **Dependencies**: 
