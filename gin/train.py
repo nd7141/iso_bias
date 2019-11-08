@@ -342,7 +342,7 @@ def get_clean_graph_indices(dataset_name, path_to_orbits):
 
     iso_graphs = iso_graphs.difference(orbit_graphs)
 
-    clean_graph_idx = [idx for idx in range(len(dataset)) if i + 1 not in iso_graphs]
+    clean_graph_idx = [idx for idx in range(len(dataset)) if idx + 1 not in iso_graphs]
 
     return clean_graph_idx, true_orbits
 

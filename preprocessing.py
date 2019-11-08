@@ -422,7 +422,7 @@ def edge_label_attribute_match(x1, x2):
     return edge_label_match(x1, x2) and edge_attribute_match(x1, x2)
 
 
-def read_graphs(dataset, dataset_path):
+def read_graphs(dataset, dataset_path, path_to_orbits):
     input_folder = f'{dataset_path}/{dataset}/'
     assert os.path.exists(input_folder), f'Path to dataset should contain folder {dataset}'
     graphs = clean_dataset(dataset, input_folder, '', path_to_orbits, save_new_dataset=False)
@@ -513,8 +513,8 @@ def verify_correctness_of_clean_datasets(dataset, path_to_old_datasets, path_to_
     :return:
     '''
 
-    new_graphs, new_graph_labels = read_graphs(dataset, path_to_new_datasets)
-    old_graphs, old_graph_labels = read_graphs(dataset, path_to_old_datasets)
+    new_graphs, new_graph_labels = read_graphs(dataset, path_to_new_datasets, path_to_orbits)
+    old_graphs, old_graph_labels = read_graphs(dataset, path_to_old_datasets, path_to_orbits)
 
     graphs_fn, indicator_fn, graph_labels_fn, node_labels_fn, edge_labels_fn, \
     edge_attributes_fn, node_attributes_fn, graph_attributes_fn = get_filenames(dataset, path_to_old_datasets)
@@ -565,7 +565,7 @@ def verify_correctness_of_clean_datasets(dataset, path_to_old_datasets, path_to_
             # check that graph labels are the same
             assert new_graph_labels[idx1] == old_graph_labels[idx2]
 
-            print('Passed', idx1, idx2)
+            # print('Passed', idx1, idx2)
     else:
         print('Clean dataset {} is correct'.format(dataset))
 
@@ -633,17 +633,19 @@ if __name__ == "__main__":
 
     ds = [
         'MUTAG',
-          'IMDB-MULTI',
+          'IMDB-BINARY',
     ]
     for dataset in ds:
 
         try:
             print(dataset)
+            print('Cleaning graph data set...')
             output_folder = f'datasets_clean/{dataset}/'
             input_folder = f'datasets_old/{dataset}/'
             path_to_orbits = 'orbits/no_labels/'
             clean_dataset(dataset, input_folder, output_folder, path_to_orbits)
 
+            print('Verifying a new clean data set is correct...')
             path_to_old_datasets = 'datasets_old/'
             path_to_new_datasets = 'datasets_clean/'
             path_to_orbits = 'orbits/no_labels/'
@@ -653,202 +655,4 @@ if __name__ == "__main__":
             print('Exception:', e)
             raise e
             break
-
-    # dataset = 'BZR'
-    # input_folder = f"datasets/{dataset}/"
-    # output_folder = f"datasets/data_adj/{dataset}_adj/"
-    # convert_dortmund_to_graphml(input_folder, output_folder)
-
-    # dir = "datasets/data_graphml/data_graphml/NCI109/"
-    # out = "datasets/NCI109_adj/"
-    # os.makedirs(out, exist_ok=True)
-    # fns = os.listdir(dir)
-    # for fn in fns:
-    #     if fn.endswith('.graphml'):
-    #         G = formatg(nx.read_graphml(dir + fn))
-    #         writeg(G, out + fn.split('.')[0] + '.adj')
-
-    # dataset = 'COLLAB'
-    # ds = [
-    #     'FIRSTMM_DB',
-    #       'OHSU',
-    #       'KKI',
-    #       'Peking_1',
-    #       'MUTAG',
-    #       'MSRC_21C',
-    #       'MSRC_9',
-    #       'Cuneiform',
-    #       'SYNTHETIC',
-    #       'COX2_MD',
-    #       'BZR_MD',
-    #       'PTC_MM',
-    #       'PTC_MR',
-    #       'PTC_FM',
-    #       'PTC_FR',
-    #       'DHFR_MD',
-    #       'Synthie',
-    #       'BZR',
-    #       'ER_MD',
-    #       'COX2',
-    #       'MSRC_21',
-    #       'ENZYMES',
-    #       'DHFR',
-    #       'IMDB-BINARY',
-    #       'PROTEINS',
-    #       'DD',
-    #       'IMDB-MULTI',
-    #       'AIDS',
-    #       'REDDIT-BINARY',
-    #       'Letter-high',
-    #       'Letter-low',
-    #       'Letter-med',
-    #       'Fingerprint',
-    #       'COIL-DEL',
-    #       'COIL-RAG',
-    #       'NCI1',
-    #       'NCI109',
-    #       'FRANKENSTEIN',
-    #       'Mutagenicity',
-    #       'REDDIT-MULTI-5K',
-    #       'COLLAB',
-    #       'Tox21_ARE',
-    #       'Tox21_aromatase',
-    #       'Tox21_MMP',
-    #       'Tox21_ER',
-    #       'Tox21_HSE',
-    #       'Tox21_AHR',
-    #       'Tox21_PPAR-gamma',
-    #       'Tox21_AR-LBD',
-    #       'Tox21_p53',
-    #       'Tox21_ER_LBD',
-    #       'Tox21_ATAD5',
-    #       'Tox21_AR',
-    #       'REDDIT-MULTI-12K',
-    #       'DBLP_v1'
-    # ]
-    # # ds = ['MUTAG']
-    # for dataset in ds:
-    #     # try:
-    #         print(dataset)
-    #         convert_dortmund_to_graphml(f'datasets/{dataset}/')
-    #     # except Exception as e:
-    #     #     print('Failed with', dataset, e)
-    #
-    # from pprint import pprint
-    #
-    # l = ['FIRSTMM_DB',
-    #      'OHSU',
-    #      'KKI',
-    #      'Peking_1',
-    #      'MUTAG',
-    #      'MSRC_21C',
-    #      'MSRC_9',
-    #      'Cuneiform',
-    #      'SYNTHETIC',
-    #      'COX2_MD',
-    #      'BZR_MD',
-    #      'PTC_MM',
-    #      'PTC_MR',
-    #      'PTC_FM',
-    #      'PTC_FR',
-    #      'DHFR_MD',
-    #      'Synthie',
-    #      'BZR',
-    #      'ER_MD',
-    #      'COX2',
-    #      'MSRC_21',
-    #      'ENZYMES',
-    #      'DHFR',
-    #      'IMDB-BINARY',
-    #      'PROTEINS',
-    #      'DD',
-    #      'IMDB-MULTI',
-    #      'AIDS',
-    #      'REDDIT-BINARY',
-    #      'Letter-high',
-    #      'Letter-low',
-    #      'Letter-med',
-    #      'Fingerprint',
-    #      'COIL-DEL',
-    #      'COIL-RAG',
-    #      'NCI1',
-    #      'NCI109',
-    #      'FRANKENSTEIN',
-    #      'Mutagenicity',
-    #      'REDDIT-MULTI-5K',
-    #      'COLLAB',
-    #      'Tox21_ARE',
-    #      'Tox21_aromatase',
-    #      'Tox21_MMP',
-    #      'Tox21_ER',
-    #      'Tox21_HSE',
-    #      'Tox21_AHR',
-    #      'Tox21_PPAR-gamma',
-    #      'Tox21_AR-LBD',
-    #      'Tox21_p53',
-    #      'Tox21_ER_LBD',
-    #      'Tox21_ATAD5',
-    #      'Tox21_AR',
-    #      'REDDIT-MULTI-12K',
-    #      'DBLP_v1']
-    # import os
-    #
-    # os.listdir()
-    #
-    # ['AIDS',
-    #  'BZR',
-    #  'BZR_MD',
-    #  'COIL-DEL',
-    #  'COIL-RAG',
-    #  'COLLAB',
-    #  'COX2',
-    #  'COX2_MD',
-    #  'Cuneiform',
-    #  'DBLP_v1',
-    #  'DD',
-    #  'DHFR',
-    #  'DHFR_MD',
-    #  'ENZYMES',
-    #  'ER_MD',
-    #  'Fingerprint',
-    #  'FIRSTMM_DB',
-    #  'FRANKENSTEIN',
-    #  'IMDB-BINARY',
-    #  'IMDB-MULTI',
-    #  'KKI',
-    #  'Letter-high',
-    #  'Letter-low',
-    #  'Letter-med',
-    #  'MSRC_21',
-    #  'MSRC_21C',
-    #  'MSRC_9',
-    #  'MUTAG',
-    #  'Mutagenicity',
-    #  'NCI1',
-    #  'NCI109',
-    #  'OHSU',
-    #  'Peking_1',
-    #  'PROTEINS',
-    #  'PTC_FM',
-    #  'PTC_FR',
-    #  'PTC_MM',
-    #  'PTC_MR',
-    #  'REDDIT-BINARY',
-    #  'REDDIT-MULTI-12K',
-    #  'REDDIT-MULTI-5K',
-    #  'SYNTHETIC',
-    #  'Synthie',
-    #  'Tox21_AHR',
-    #  'Tox21_AR',
-    #  'Tox21_ARE',
-    #  'Tox21_AR-LBD',
-    #  'Tox21_aromatase',
-    #  'Tox21_ATAD5',
-    #  'Tox21_ER',
-    #  'Tox21_ER_LBD',
-    #  'Tox21_HSE',
-    #  'Tox21_MMP',
-    #  'Tox21_p53',
-    #  'Tox21_PPAR-gamma',
-    #  'TRIANGLES',
-    #  'TWITTER-Real-Graph-Partia']
+        print()
