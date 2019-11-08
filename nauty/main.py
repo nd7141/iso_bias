@@ -10,6 +10,7 @@ from pprint import pprint
 
 
 def run_nauty(f1, f2, use_node_labels=False):
+    '''it will check for isomorphism and write a file outf if isomorphism exists'''
     outf = outdir + f1.split('/')[-1] + '-' + f2.split('/')[-1]
     i = re.findall("\d+", f1)[-1]
     j = re.findall("\d+", f2)[-1]
@@ -25,6 +26,7 @@ def run_nauty(f1, f2, use_node_labels=False):
 
 
 def get_graph_stats(fn):
+    '''output number of nodes and edges'''
     with open(indir + fn) as f:
         line = next(f)
         n, m = line.split()
@@ -32,6 +34,7 @@ def get_graph_stats(fn):
 
 
 def get_equivalent_graphs(fns):
+    '''group graphs together according to equivalent stats'''
     stats2graphs = ddict(list)
     for fn in fns:
         stats2graphs[get_graph_stats(fn)].append(fn)
@@ -39,6 +42,7 @@ def get_equivalent_graphs(fns):
 
 
 def get_dataset_pairs(fns):
+    '''get pairs for each group of graphs'''
     stats2graphs = get_equivalent_graphs(fns)
     generators = []
     for graphs in stats2graphs.values():
@@ -46,16 +50,22 @@ def get_dataset_pairs(fns):
             generators.append(combinations(graphs, 2))
     return chain(*generators)
 
+def get_graph_groups(results_dir, dataset, indir):
+    outdir = f'{results_dir}/{dataset}_groups/'
+    exec = 'gr'
+    compile_exec = f"gcc -o {exec} nauty_gr.c nauty26r11/nauty.a"
+    check_call(compile_exec, cwd=".", shell=True)
+
+    os.makedirs(outdir, exist_ok=True)
+    fns = os.listdir(indir)
+    for fn in fns:
+        if fn.endswith(".adj"):
+            # print(fn)
+            inf = indir + fn
+            outf = outdir + fn.split('.')[0] + '.txt'
+            check_call(f"./{exec} {inf} {outf}", cwd=".", shell=True)
 
 if __name__ == '__main__':
-
-    use_node_labels = True
-    compute_groups = False
-    if use_node_labels:
-        results_dir = 'nauty_results/results_node_labels/'
-    else:
-        results_dir = 'nauty_results/results_no_labels/'
-
     # experiment: write genrators for each graph
     # https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets#contact
     dataset = 'REDDIT-BINARY'
@@ -117,46 +127,33 @@ if __name__ == '__main__':
     ]
     # ds = ['Cuneiform']
 
+    use_node_labels = False
+    compute_groups = False
+    if use_node_labels:
+        results_dir = 'nauty_results/results_node_labels/'
+    else:
+        results_dir = 'nauty_results/results_no_labels/'
+
+    ds = [
+        'MUTAG',
+        'IMDB-BINARY',
+    ]
+
     for dataset in ds:
         print(dataset)
         os.makedirs(results_dir, exist_ok=True)
-        indir = f'datasets/data_adj/{dataset}_adj/'
-        outdir = f'{results_dir}/{dataset}_groups/'
+        indir = f'datasets_nauty/{dataset}_adj/'
 
-        # compile program for running graph isomorphism
+        # compile program for getting groups for each graph
         if compute_groups:
-            exec = 'gr'
-            compile_exec = f"gcc -o {exec} nauty_gr.c nauty26r11/nauty.a"
-            check_call(compile_exec, cwd=".", shell=True)
+            get_graph_groups(results_dir, dataset, indir)
 
-            os.makedirs(outdir, exist_ok=True)
-            fns = os.listdir(indir)
-            for fn in fns:
-                if fn.endswith(".adj"):
-                    # print(fn)
-                    inf = indir + fn
-                    outf = outdir + fn.split('.')[0] + '.txt'
-                    # try:
-                    check_call(f"./{exec} {inf} {outf}", cwd=".", shell=True)
-                    # except Exception as e:
-                    #     print(f"File: {fn}. Exception: {e}")
-
-        #  experiment: run graph isomorphism for all graphs in a folder, write results to outf
-        # ds = ['DD', 'enzymes', 'NCI1', 'NCI109']
-        # ds = ['enzymes']
-        # ds = ['REDDIT-MULTI-5K', 'REDDIT-MULTI-12K']
-        # for dataset in ds:
-        indir = f'datasets/data_adj/{dataset}_adj/'
-
+        # this will be used to generate files that are isomorphic to each other
         outdir = f'{results_dir}/{dataset}_iso/'
         if (not os.path.exists(indir + f"1.node_labels") and use_node_labels):
             print(f"Files for node labels is not present but use_node_labels=True. Skip the dataset {dataset}")
             continue
         os.makedirs(outdir, exist_ok=True)
-
-        outf = f'{results_dir}/{dataset}_iso.txt'
-        if os.path.exists(outf):
-            check_call(f"rm {outf}", cwd=".", shell=True)
 
         # compile program for running graph isomorphism
         if use_node_labels:
@@ -165,52 +162,13 @@ if __name__ == '__main__':
             compile_exec = "gcc -o iso nauty_iso.c nauty26r11/nauty.a"
         check_call(compile_exec, cwd=".", shell=True)
 
-        # run graph isomorphism
+        # run pairwise graph isomorphism test for a data set
         fns = list(filter(lambda x: x.endswith('.adj'), os.listdir(indir)))
-        N = len(fns)
-        ids = []
-        start = time.time()
-
         f = partial(run_nauty, use_node_labels=use_node_labels)  # function to call executable
 
-        # pprint(get_equivalent_graphs(fns))
+        # this will generate only pairs that have the same number of nodes/edges
         pairs = get_dataset_pairs(fns)
-        # pairs = combinations(fns, 2)
 
         pool = mp.Pool(processes=64)
         pool.starmap(f, pairs)
         pool.close()
-
-        # for i in range(N-1):
-        #     start2i = time.time()
-        #     for j in range(i+1, N):
-        #         f1 = indir + fns[i]
-        #         f2 = indir + fns[j]
-        #         print(f1, f2)
-        #         check_call(f"./iso {f1} {f2} {outf} &" , cwd = '.', shell= True)
-        #         ids.append([f1, f2])
-        #     finish2i = time.time()
-        #     itsec = (finish2i-start2i)/(N-i-1)
-        #     print('Total time spent on {} iteration'.format(i), finish2i - start2i)
-        #     print('Average time per pair', itsec)
-        #     print('Estimated time remaining', (N-i)*(N-i-1)*itsec/2)
-        # end = time.time()
-        # print('Total time spent:', end - start)
-
-        # write labels of graphs
-        # with open(f'datasets/data_graphml/{dataset}.label') as f:
-        #     labels = next(f).strip().split()
-        # fn2label = dict(zip(sorted(fns, key=lambda x: int(re.findall('\d+', x)[0])), labels))
-        #
-        # print(fn2label)
-
-        # lines = []
-        #
-        # with open(outf) as f:
-        #     for c, line in enumerate(f):
-        #         f1 = ids[c][0].split('/')[-1]
-        #         f2 = ids[c][1].split('/')[-1]
-        #         lines.append(line.strip() + f" {fn2label[f1]} {fn2label[f2]}\n")
-        #
-        # with open(outf, 'w') as f:
-        #     f.write(''.join(lines))

@@ -631,12 +631,13 @@ if __name__ == "__main__":
           'REDDIT-MULTI-12K'
     ]
 
+    # generate clean data sets in Dortmund Format
     ds = [
         'MUTAG',
           'IMDB-BINARY',
     ]
-    for dataset in ds:
 
+    for dataset in ds:
         try:
             print(dataset)
             print('Cleaning graph data set...')
@@ -656,3 +657,9 @@ if __name__ == "__main__":
             raise e
             break
         print()
+
+    # convert graphs in a data set to nauty format
+    dataset = 'MUTAG'
+    input_folder = f"datasets_old/{dataset}/"
+    output_folder = f"datasets_nauty/{dataset}_adj/"
+    convert_dortmund_to_graphml(input_folder, output_folder)
