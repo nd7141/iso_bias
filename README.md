@@ -1,5 +1,7 @@
 ### **Understanding Isomorphism Bias in Graph Data Sets**
 
+To download clean data sets use: https://github.com/nd7141/graph_datasets
+
 ### Intro
 This code has two main components:
   1. Finding all isomorphism pairs in a graph data set.
